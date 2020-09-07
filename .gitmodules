@@ -4,3 +4,6 @@
 [submodule "submodule/PhysicsSimulator"]
 	path = submodule/PhysicsSimulator
 	url = git@github.com:RyosukeMatsushima/PhysicsSimulator.git
+[submodule "src/submodule/PhysicsSimulator"]
+	path = src/submodule/PhysicsSimulator
+	url = git@github.com:RyosukeMatsushima/PhysicsSimulator.git
