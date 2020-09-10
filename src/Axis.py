@@ -25,5 +25,5 @@ class Axis:
         if val < self.min or self.max < val:
             raise ArithmeticError("val is not in range")
 
-    def get_step(self, val):
-        return self.steps[self.val2num(val)]
+    def get_step(self, num):
+        return self.steps[num]

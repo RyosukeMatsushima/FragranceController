@@ -14,8 +14,8 @@ class TopologicalSpace:
     def __init__(self):
         self.model = SinglePendulum(0, 0, mass=10, length=2, drag=4)
 
-        self.theta_axis = Axis("theta", -5.0, 5.0, 0.1)
-        self.theta_dot_axis = Axis("theta_dot", -5.0, 5.0, 0.1)
+        self.theta_axis = Axis("theta", -5.0, 5.0, 1)
+        self.theta_dot_axis = Axis("theta_dot", -5.0, 5.0, 1)
 
         self.axes = (
             self.theta_axis,
@@ -28,9 +28,9 @@ class TopologicalSpace:
         self.delta_t = 0.001
 
     def _element_count(self, axes):
-        val = 0
+        val = 1
         for axis in axes:
-            val += len(axis.elements)
+            val *= len(axis.elements)
         return val
 
     def get_val(self, pos_TS):
@@ -42,13 +42,19 @@ class TopologicalSpace:
     def pos_TS2pos_AS(self, pos_TS):
         if len(pos_TS) is not len(self.axes):
             raise TypeError("size of element_num and number of axes is not same")
-        num = 0
-        step = 1
+        axis_list = [len(axis.elements) - 1 for axis in self.axes]
+        pos = 0
         for i in range(len(self.axes)):
-            step *= len(self.axes[i].elements)
-            self.axes[i].check_num_range(pos_TS[i])
-            num += pos_TS[i] * int(self.element_count/step)
-        return num
+            del axis_list[0]
+            step = self._times_all(axis_list)
+            pos += pos_TS[i] * step
+        return pos
+
+    def _times_all(self, l):
+        val = 1
+        for i in l:
+            val *= i
+        return val
 
     def pos_TS2coodinate(self, pos_TS):
         return [self.axes[i].num2val(pos_TS[i]) for i in range(len(self.axes))]
@@ -76,8 +82,7 @@ class TopologicalSpace:
             p_remain_pos = 1.0    #P(pos_i, t + delta_t | pos_i, t)
             for i in range(len(pos_TS)):
                 velosity = velosites[i]
-                val = self.axes[i].num2val(pos_TS[i])
-                step = self.axes[i].get_step(val)
+                step = self.axes[i].get_step(pos_TS[i])
                 courant_number = velosity * self.delta_t / step
 
                 pos = pos_TS[:]
@@ -86,7 +91,7 @@ class TopologicalSpace:
                     pos[i] += 1
                 else:
                     pos[i] -= 1
-                stochastic_matrix[self.pos_TS2pos_AS(pos)][self.pos_TS2pos_AS(pos_TS)] = courant_number
+                stochastic_matrix[self.pos_TS2pos_AS(pos)][self.pos_TS2pos_AS(pos_TS)] = abs(courant_number)
                 p_remain_pos -= abs(courant_number)
 
             if p_remain_pos < 0:
