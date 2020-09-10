@@ -7,7 +7,7 @@ class Axis:
         self.max =max
         self.min_step = min_step
         self.elements = np.arange(min, max + min_step, min_step)
-        self.element_count = self.elements.shape[0]
+        self.steps = np.full(self.elements.shape[0], min_step, dtype=float)
 
     def num2val(self, num):
         self.check_num_range(num)
@@ -15,13 +15,15 @@ class Axis:
 
     def val2num(self, val):
         self.check_val_range(val)
-        return int(val / self.min_step)
+        return np.abs(self.elements - val).argmin()
 
     def check_num_range(self, num):
-        if num < 0 or self.element_count + 1 < num:
+        if num < 0 or len(self.elements) < num:
             raise ArithmeticError("num is not in range")
-
 
     def check_val_range(self, val):
         if val < self.min or self.max < val:
             raise ArithmeticError("val is not in range")
+
+    def get_step(self, val):
+        return self.steps[self.val2num(val)]
