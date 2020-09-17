@@ -3,10 +3,12 @@ from src.TopologicalSpace import TopologicalSpace
 import numpy as np
 
 topologicalSpace = TopologicalSpace()
-# print(topologicalSpace.stochastic_matrix(1))
+print(topologicalSpace.astablishment_space)
 stochastic_matrix = topologicalSpace.stochastic_matrix(0)
-for lists in stochastic_matrix:
-    print(lists)
+# for lists in stochastic_matrix:
+#     print(lists)
+
+print("stochastic_matrix_5")
 
 stochastic_matrix_5 = np.linalg.matrix_power(stochastic_matrix, 5)
 for lists in stochastic_matrix_5:

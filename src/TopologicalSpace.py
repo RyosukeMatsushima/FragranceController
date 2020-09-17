@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import itertools
 from src.Axis import Axis
 from src.submodule.PhysicsSimulator.SinglePendulum.SinglePendulum import SinglePendulum
@@ -33,15 +34,17 @@ class TopologicalSpace:
             val *= len(axis.elements)
         return val
 
-    def get_val(self, pos_TS):
+    def get_val(self, coodinate):
+        pos_TS = self.coodinate2pos_TS(coodinate)
         return self.astablishment_space[self.pos_TS2pos_AS(pos_TS)]
 
-    def write_val(self, pos_TS, val):
+    def write_val(self, coodinate, val):
+        pos_TS = self.coodinate2pos_TS(coodinate)
         self.astablishment_space[self.pos_TS2pos_AS(pos_TS)] = val
 
     def pos_TS2pos_AS(self, pos_TS):
         if len(pos_TS) is not len(self.axes):
-            raise TypeError("size of element_num and number of axes is not same")
+            raise TypeError("size of pos_TS and number of axes is not same")
         axis_list = [len(axis.elements) - 1 for axis in self.axes]
         pos = 0
         for i in range(len(self.axes)):
@@ -58,6 +61,17 @@ class TopologicalSpace:
 
     def pos_TS2coodinate(self, pos_TS):
         return [self.axes[i].num2val(pos_TS[i]) for i in range(len(self.axes))]
+
+    def coodinate2pos_TS(self, coodinate):
+        if len(coodinate) is not len(self.axes):
+            raise TypeError("size of coodinate and number of axes is not same")
+        pos_TS = []
+        for i in range(len(self.axes)):
+            pos_TS.append(self.axes[i].val2num(coodinate[i]))
+        return pos_TS
+
+    def coodinate2pos_AS(self, coodinate):
+        return self.pos_TS2pos_AS(self.coodinate2pos_TS(coodinate))
 
     def is_edge_of_TS(self, pos_TS):
         if len(pos_TS) is not len(self.axes):
@@ -99,3 +113,33 @@ class TopologicalSpace:
             stochastic_matrix[self.pos_TS2pos_AS(pos_TS)][self.pos_TS2pos_AS(pos_TS)] = p_remain_pos
 
         return stochastic_matrix
+
+    def show_plot(self, axis1_name, axis2_name, coodinate):
+
+        axis1_index_list = [i for i, axis in enumerate(self.axes) if axis.name == axis1_name]
+        axis2_index_list = [i for i, axis in enumerate(self.axes) if axis.name == axis2_name]
+
+        if len(axis1_index_list) is not 1:
+            raise TypeError(f"wrong axis name {axis1_name}")
+        if len(axis2_index_list) is not 1:
+            raise TypeError(f"wrong axis name {axis2_name}")
+
+        axis1_index = axis1_index_list[0]
+        axis2_index = axis2_index_list[0]
+        axis1 = self.axes[axis1_index]
+        axis2 = self.axes[axis2_index]
+
+        concentration = np.zeros((len(axis1.elements), len(axis2.elements)))
+
+        for i, axis1_val in enumerate(axis1.elements):
+            for j, axis2_val in enumerate(axis2.elements):
+                coodinate[axis1_index] = axis1_val
+                coodinate[axis2_index] = axis2_val
+                concentration[i][j] = self.astablishment_space[self.coodinate2pos_AS(coodinate)]
+
+        plt.figure(figsize=(7,5))
+        ex = [axis1.min, axis1.max, axis2.min, axis2.max]
+        plt.imshow(np.flip(concentration.T, 0),extent=ex,interpolation='nearest',cmap='Blues',aspect=(axis1.max-axis1.min)/(axis2.max-axis2.min),alpha=1)
+
+        plt.colorbar()
+        plt.show()
