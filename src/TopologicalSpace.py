@@ -15,8 +15,8 @@ class TopologicalSpace:
     def __init__(self):
         self.model = SinglePendulum(0, 0, mass=10, length=2, drag=4)
 
-        self.theta_axis = Axis("theta", -5.0, 5.0, 1)
-        self.theta_dot_axis = Axis("theta_dot", -5.0, 5.0, 1)
+        self.theta_axis = Axis("theta", -1.0, 1.0, 0.1)
+        self.theta_dot_axis = Axis("theta_dot", -1.0, 1.0, 0.1)
 
         self.axes = (
             self.theta_axis,

@@ -1,4 +1,6 @@
 import numpy as np
+from copy import copy
+import tensorflow as tf
 from src.TopologicalSpace import TopologicalSpace
 
 class InputCalculator:
@@ -7,11 +9,15 @@ class InputCalculator:
 
         self.target_coodinate = (0, 0)
         self.simulate_time = 0
-        self.set_target_coodinate(self.target_coodinate)
-    
-    def set_target_coodinate(self, coodinate):
-        self.t_s.write_val(coodinate, 1.0)
 
-    def simulate(self, times):
-        st_matrix = np.linalg.matrix_power(self.t_s.stochastic_matrix(0), times)
-        self.t_s.astablishment_space = np.dot(st_matrix.T, self.t_s.astablishment_space.T) #TODO: verification of accounts
+        self.astablishment_space = copy(self.t_s.astablishment_space)
+        self.astablishment_space[self.t_s.coodinate2pos_AS(self.target_coodinate)] = 1.0 # set target coodinate
+        self.astablishment_space_tf = tf.Variable(np.array([self.astablishment_space]).T, dtype=tf.float32)
+        self.stochastic_matrix_tf = tf.constant(self.t_s.stochastic_matrix(0), dtype=tf.float32)
+
+    @tf.function
+    def simulate(self):
+        self.astablishment_space_tf.assign(self.stochastic_matrix_tf @ self.astablishment_space_tf)
+
+    def update_astablishment_space(self):
+        self.t_s.astablishment_space = self.astablishment_space_tf.numpy()
