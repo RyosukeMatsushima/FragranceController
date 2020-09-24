@@ -15,8 +15,8 @@ class TopologicalSpace:
     def __init__(self):
         self.model = SinglePendulum(0, 0, mass=10, length=2, drag=4)
 
-        self.theta_axis = Axis("theta", -1.0, 1.0, 0.1)
-        self.theta_dot_axis = Axis("theta_dot", -1.0, 1.0, 0.1)
+        self.theta_axis = Axis("theta", -1.0, 7.0, 0.1)
+        self.theta_dot_axis = Axis("theta_dot", -7.0, 7.0, 0.1)
 
         self.axes = (
             self.theta_axis,
@@ -91,7 +91,7 @@ class TopologicalSpace:
         for pos_TS in pos_TS_elements:
             if self.is_edge_of_TS(pos_TS):
                 continue
-            velosites = self.model.dynamics(*self.pos_TS2coodinate(pos_TS), input) # velosity as a vector
+            velosites = -self.model.dynamics(*self.pos_TS2coodinate(pos_TS), input) # velosity as a vector
 
             p_remain_pos = 1.0    #P(pos_i, t + delta_t | pos_i, t)
             for i in range(len(pos_TS)):
