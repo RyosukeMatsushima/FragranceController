@@ -11,6 +11,7 @@ class InputCalculator:
         u_set = np.arange(-2., 2. + d, d)
         u_P_list = np.full(u_set.shape, 1.)
         u_P_set = u_P_list/u_P_list.sum()
+        print(u_P_set)
 
         self.target_coodinate = (0, 0)
         self._simulate_time = 0.
@@ -30,3 +31,12 @@ class InputCalculator:
 
     def update_astablishment_space(self):
         self.t_s.astablishment_space = self.astablishment_space_tf.numpy()
+
+    def method1(self):
+        # e, v = tf.linalg.eigh(self.stochastic_matrix)
+        # print(e)
+        #TODO: check all e element is under 1.0
+        eye = np.eye(self.t_s.element_count, self.t_s.element_count, dtype=float)
+        eye_tf = tf.constant(eye, dtype=tf.float32)
+        val1 = tf.linalg.inv(self.stochastic_matrix_tf - eye_tf)
+        self.astablishment_space_tf.assign(- self.stochastic_matrix_tf @ val1 @ self.astablishment_space_tf)
