@@ -81,13 +81,15 @@ class TopologicalSpace:
         max_edge = np.array([len(axis.elements) - 1 for axis in self.axes])
         return True in (pos == min_edge) or True in (pos == max_edge)
 
+    def pos_TS_elements(self):
+        return list(itertools.product(*[list(range(len(axis.elements))) for axis in self.axes]))
+
 
 # calcurate stochastic_matrix using windward difference method
 # TODO: find refarence
-
     def stochastic_matrix(self, input):
         stochastic_matrix = np.zeros((self.element_count, self.element_count))
-        pos_TS_elements = itertools.product(*[list(range(len(axis.elements))) for axis in self.axes])
+        pos_TS_elements = self.pos_TS_elements()
         for pos_TS in pos_TS_elements:
             if self.is_edge_of_TS(pos_TS):
                 continue
@@ -113,6 +115,33 @@ class TopologicalSpace:
             stochastic_matrix[self.pos_TS2pos_AS(pos_TS)][self.pos_TS2pos_AS(pos_TS)] = p_remain_pos
 
         return stochastic_matrix
+
+    def gradient_matrix(self):
+        def differential_calculus(pre, follow, step):
+            return (pre - follow)/(2*step)
+
+        gradient_matrix = np.zeros((self.element_count, len(self.axes)))
+        pos_TS_elements = self.pos_TS_elements()
+
+        for pos_TS in pos_TS_elements:
+            if self.is_edge_of_TS(pos_TS):
+                continue
+
+            for i in range(len(pos_TS)): #TODO: turn to list first
+                pre_pos = list(pos_TS[:])
+                pre_pos[i] -= 1
+                follow_pos = list(pos_TS[:])
+                follow_pos[i] += 1
+
+                if (follow_pos[i] - pre_pos[i]) is not 2:
+                    ArithmeticError("gradient_matrix is wrong") #TODO: remove sometimes
+
+                pre_val = self.astablishment_space[self.pos_TS2pos_AS(pre_pos)]
+                follow_val = self.astablishment_space[self.pos_TS2pos_AS(follow_pos)]
+                step = self.axes[i].get_step(pos_TS[i])
+                gradient_matrix[self.pos_TS2pos_AS(pos_TS), i] = differential_calculus(pre_val, follow_val, step)
+
+        return gradient_matrix
 
     def show_plot(self, axis1_name, axis2_name, coodinate):
 
