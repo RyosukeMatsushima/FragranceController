@@ -3,6 +3,12 @@ from copy import copy
 import tensorflow as tf
 from src.TopologicalSpace import TopologicalSpace
 
+# for save input space
+import os
+import glob
+import json
+import datetime
+
 class InputCalculator:
     def __init__(self):
         self.t_s = TopologicalSpace()
@@ -64,6 +70,7 @@ class InputCalculator:
 
         for input in input_space:
             print(input)
+        self.save_input_space(input_space)
 
     def simTimeToLim(self):
         # e, v = tf.linalg.eigh(self.stochastic_matrix)
@@ -74,3 +81,30 @@ class InputCalculator:
         eye_tf = tf.constant(eye, dtype=tf.float32)
         val1 = tf.linalg.inv(self.stochastic_matrix_tf - eye_tf)
         self.astablishment_space_tf.assign(- self.stochastic_matrix_tf @ val1 @ self.astablishment_space_tf)
+
+    def save_input_space(self, input_space):
+        dt_now = datetime.datetime.now()
+
+        file_list = glob.glob("../*")
+
+        n = 1
+        while(True):
+            path = "./input_space/input_space" + str(n)
+            n += 1
+            if not path in file_list:
+                print(path)
+                os.mkdir(path)
+                os.chdir(path)
+                np.save("input_space", input_space)
+                model_param = self.t_s.model.get_param()
+                axes = {axis.name: axis.elements.tolist() for axis in self.t_s.axes}
+
+                param = {
+                        "datetime": str(dt_now),
+                        "axes": axes,
+                        "model_param": model_param
+                        }
+
+                with open('param.json', 'w') as json_file:
+                    json.dump(param, json_file)
+                break
