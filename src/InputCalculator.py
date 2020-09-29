@@ -10,8 +10,8 @@ import json
 import datetime
 
 class InputCalculator:
-    def __init__(self):
-        self.t_s = TopologicalSpace()
+    def __init__(self, t_s: TopologicalSpace):
+        self.t_s = t_s
 
         d = 1.
         self.u_set = np.arange(-2., 2. + d, d)
@@ -85,7 +85,7 @@ class InputCalculator:
     def save_input_space(self, input_space):
         dt_now = datetime.datetime.now()
 
-        file_list = glob.glob("../*")
+        file_list = glob.glob("./input_space/*")
 
         n = 1
         while(True):
@@ -97,7 +97,7 @@ class InputCalculator:
                 os.chdir(path)
                 np.save("input_space", input_space)
                 model_param = self.t_s.model.get_param()
-                axes = {axis.name: axis.elements.tolist() for axis in self.t_s.axes}
+                axes = [axis.get_param() for axis in self.t_s.axes]
 
                 param = {
                         "datetime": str(dt_now),

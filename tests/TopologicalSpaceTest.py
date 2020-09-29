@@ -1,8 +1,10 @@
 from unittest import TestCase
 from src.TopologicalSpace import TopologicalSpace
+from src.Axis import Axis
 import numpy as np
 
-topologicalSpace = TopologicalSpace()
+axes = (Axis("theta", -1.0, 7.0, 0.1), Axis("theta_dot", -7.0, 7.0, 0.1))
+topologicalSpace = TopologicalSpace(*axes)
 print(topologicalSpace.astablishment_space)
 stochastic_matrix = topologicalSpace.stochastic_matrix(0)
 # for lists in stochastic_matrix:

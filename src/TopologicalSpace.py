@@ -12,16 +12,9 @@ coodinate
 '''
 
 class TopologicalSpace:
-    def __init__(self):
+    def __init__(self, *axes: Axis):
         self.model = SinglePendulum(0, 0, mass=10, length=2, drag=4)
-
-        self.theta_axis = Axis("theta", -1.0, 7.0, 0.1)
-        self.theta_dot_axis = Axis("theta_dot", -7.0, 7.0, 0.1)
-
-        self.axes = (
-            self.theta_axis,
-            self.theta_dot_axis
-        )
+        self.axes = axes
         self.element_count = self._element_count(self.axes)
         self.astablishment_space = np.zeros(self.element_count)
 

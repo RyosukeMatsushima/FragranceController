@@ -27,3 +27,25 @@ class Axis:
 
     def get_step(self, num):
         return self.steps[num]
+
+    def get_param(self):
+        return {"name": self.name, "min": self.min, "max": self.max, "min_step": self.min_step, "elements": self.elements.tolist()}
+
+    def set_param(self, **kwargs):
+        for key in kwargs:
+            if key == "name":
+                self.name = kwargs[key]
+                continue
+            if key == "min":
+                self.min = kwargs[key]
+                continue
+            if key == "max":
+                self.max = kwargs[key]
+                continue
+            if key == "min_step":
+                self.min_step = kwargs[key]
+                continue
+            if key == "elements":
+                self.elements = np.array(kwargs[key])
+                continue
+            raise TypeError("The required key {key!r} ""are not in kwargs".format(key=key))
