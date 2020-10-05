@@ -13,7 +13,7 @@ coodinate
 
 class TopologicalSpace:
     def __init__(self, *axes: Axis):
-        self.model = SinglePendulum(0, 0, mass=10, length=2, drag=4)
+        self.model = SinglePendulum(3, 0, mass=0.6, length=2, drag=0.1)
         self.axes = axes
         self.element_count = self._element_count(self.axes)
         self.astablishment_space = np.zeros(self.element_count)
@@ -80,13 +80,14 @@ class TopologicalSpace:
 
 # calcurate stochastic_matrix using windward difference method
 # TODO: find refarence
-    def stochastic_matrix(self, input):
+    def stochastic_matrix(self, input, is_time_reversal: bool):
         stochastic_matrix = np.zeros((self.element_count, self.element_count))
         pos_TS_elements = self.pos_TS_elements()
+        time_direction = -1.0 if is_time_reversal else 1.0
         for pos_TS in pos_TS_elements:
             if self.is_edge_of_TS(pos_TS):
                 continue
-            velosites = -self.model.dynamics(*self.pos_TS2coodinate(pos_TS), input) # velosity as a vector
+            velosites = time_direction * self.model.dynamics(*self.pos_TS2coodinate(pos_TS), input) # velosity as a vector
 
             p_remain_pos = 1.0    #P(pos_i, t + delta_t | pos_i, t)
             for i in range(len(pos_TS)):
@@ -136,21 +137,14 @@ class TopologicalSpace:
 
         return gradient_matrix
 
-    def show_plot(self, axis1_name, axis2_name, coodinate):
+    def axis_name2axis(self, name):
+        axis_index_list = [i for i, axis in enumerate(self.axes) if axis.name == name]
+        if len(axis_index_list) is not 1:
+            raise TypeError(f"wrong axis name {name}")
+        axis_index = axis_index_list[0]
+        return self.axes[axis_index], axis_index
 
-        axis1_index_list = [i for i, axis in enumerate(self.axes) if axis.name == axis1_name]
-        axis2_index_list = [i for i, axis in enumerate(self.axes) if axis.name == axis2_name]
-
-        if len(axis1_index_list) is not 1:
-            raise TypeError(f"wrong axis name {axis1_name}")
-        if len(axis2_index_list) is not 1:
-            raise TypeError(f"wrong axis name {axis2_name}")
-
-        axis1_index = axis1_index_list[0]
-        axis2_index = axis2_index_list[0]
-        axis1 = self.axes[axis1_index]
-        axis2 = self.axes[axis2_index]
-
+    def get_concentration(self, axis1: Axis, axis2: Axis, axis1_index, axis2_index, coodinate):
         concentration = np.zeros((len(axis1.elements), len(axis2.elements)))
 
         for i, axis1_val in enumerate(axis1.elements):
@@ -159,9 +153,30 @@ class TopologicalSpace:
                 coodinate[axis2_index] = axis2_val
                 concentration[i][j] = self.astablishment_space[self.coodinate2pos_AS(coodinate)]
 
+        return concentration
+
+    def show_astablishment_space(self, axis1_name, axis2_name, coodinate):
+        axis1, axis1_index = self.axis_name2axis(axis1_name)
+        axis2, axis2_index = self.axis_name2axis(axis2_name)
+        concentration = self.get_concentration(axis1, axis2, axis1_index, axis2_index, coodinate)
         plt.figure(figsize=(7,5))
         ex = [axis1.min, axis1.max, axis2.min, axis2.max]
         plt.imshow(np.flip(concentration.T, 0),extent=ex,interpolation='nearest',cmap='Blues',aspect=(axis1.max-axis1.min)/(axis2.max-axis2.min),alpha=1)
 
         plt.colorbar()
+        plt.show()
+
+    def show_astablishment_space_with_tragectory(self, axis1_name, axis2_name, coodinate, data1, data2):
+        axis1, axis1_index = self.axis_name2axis(axis1_name)
+        axis2, axis2_index = self.axis_name2axis(axis2_name)
+        concentration = self.get_concentration(axis1, axis2, axis1_index, axis2_index, coodinate)
+        fig = plt.figure(figsize=(7,5))
+        ax = fig.subplots()
+        ex = [axis1.min, axis1.max, axis2.min, axis2.max]
+        # TODO: add color bar
+        ax.imshow(np.flip(concentration.T, 0),extent=ex,interpolation='nearest',cmap='Blues',aspect=(axis1.max-axis1.min)/(axis2.max-axis2.min),alpha=1)
+
+        ax.plot(data1, data2, linewidth=1, color="crimson")
+        ax.set_xlabel(r"$\theta$ [rad]") #TODO: appley other axis
+        ax.set_ylabel(r"$\dot \theta$ [rad/s]")
         plt.show()
