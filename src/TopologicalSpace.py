@@ -166,6 +166,17 @@ class TopologicalSpace:
         plt.colorbar()
         plt.show()
 
+    def show_astablishment_space_in_range(self, axis1_name, axis2_name, coodinate, max_value):
+        axis1, axis1_index = self.axis_name2axis(axis1_name)
+        axis2, axis2_index = self.axis_name2axis(axis2_name)
+        concentration = self.get_concentration(axis1, axis2, axis1_index, axis2_index, coodinate)
+        plt.figure(figsize=(7,5))
+        ex = [axis1.min, axis1.max, axis2.min, axis2.max]
+        plt.imshow(np.flip(np.where(concentration > max_value, max_value, concentration).T, 0),extent=ex,interpolation='nearest',cmap='Blues',aspect=(axis1.max-axis1.min)/(axis2.max-axis2.min),alpha=1)
+
+        plt.colorbar()
+        plt.show()
+
     def show_astablishment_space_with_tragectory(self, axis1_name, axis2_name, coodinate, data1, data2):
         axis1, axis1_index = self.axis_name2axis(axis1_name)
         axis2, axis2_index = self.axis_name2axis(axis2_name)
@@ -179,4 +190,12 @@ class TopologicalSpace:
         ax.plot(data1, data2, linewidth=1, color="crimson")
         ax.set_xlabel(r"$\theta$ [rad]") #TODO: appley other axis
         ax.set_ylabel(r"$\dot \theta$ [rad/s]")
+        plt.show()
+
+    def show_concentration_img(self, axis1: Axis, axis2: Axis, concentration):
+        plt.figure(figsize=(7,5))
+        ex = [axis1.min, axis1.max, axis2.min, axis2.max]
+        plt.imshow(np.flip(concentration.T, 0),extent=ex,interpolation='nearest',cmap='Blues',aspect=(axis1.max-axis1.min)/(axis2.max-axis2.min),alpha=1)
+
+        plt.colorbar()
         plt.show()

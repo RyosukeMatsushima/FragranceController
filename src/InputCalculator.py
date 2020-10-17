@@ -13,14 +13,15 @@ import datetime
 class InputCalculator:
     def __init__(self, t_s: TopologicalSpace):
         self.t_s = t_s
-        is_time_reversal = False
+        is_time_reversal = True
 
         d = 1.
-        # self.u_set = np.arange(-2., 2. + d, d)
-        self.u_set = np.array([0.])
+        self.u_set = np.arange(-2., 2. + d, d)
+        # self.u_set = np.array([0.])
         self.moderate_u = 0
         u_P_list = np.full(self.u_set.shape, 1.)
         u_P_set = u_P_list/u_P_list.sum()
+        print("u_P_set")
         print(u_P_set)
 
         self.target_coodinate = (1.0, 0.)
@@ -93,6 +94,7 @@ class InputCalculator:
     def method1(self):
         self.simTimeToLim()
         self.update_astablishment_space()
+        self.save_astablishment_space(self.t_s.astablishment_space)
         gradient_matrix = self.t_s.gradient_matrix()
         input_space = np.zeros([len(axis.elements) for axis in self.t_s.axes])
         pos_TS_elements = self.t_s.pos_TS_elements()
@@ -116,6 +118,15 @@ class InputCalculator:
             print(input)
         self.save_input_space(input_space)
         self.t_s.show_concentration_img(self.t_s.axes[0], self.t_s.axes[1], input_space)
+
+    def method_save_astablishment_space(self):
+        self.simTimeToLim()
+        self.update_astablishment_space()
+        self.save_astablishment_space(self.t_s.astablishment_space)
+
+        for i in range(10):
+            max_val = 1 * 10 ** (- i)
+            self.t_s.show_astablishment_space_in_range("theta", "theta_dot", [0, 0], max_val)
 
     def simTimeToLim(self):
         # e, v = tf.linalg.eigh(self.stochastic_matrix)
@@ -141,6 +152,34 @@ class InputCalculator:
                 os.mkdir(path)
                 os.chdir(path)
                 np.save("input_space", input_space)
+                model_param = self.t_s.model.get_param()
+                axes = [axis.get_param() for axis in self.t_s.axes]
+
+                param = {
+                        "datetime": str(dt_now),
+                        "axes": axes,
+                        "model_param": model_param
+                        }
+
+                with open('param.json', 'w') as json_file:
+                    json.dump(param, json_file)
+                break
+
+
+    def save_astablishment_space(self, astablishment_space):
+        dt_now = datetime.datetime.now()
+
+        file_list = glob.glob("./astablishment_space/*")
+
+        n = 1
+        while(True):
+            path = "./astablishment_space/astablishment_space" + str(n)
+            n += 1
+            if not path in file_list:
+                print(path)
+                os.mkdir(path)
+                os.chdir(path)
+                np.save("astablishment_space", astablishment_space)
                 model_param = self.t_s.model.get_param()
                 axes = [axis.get_param() for axis in self.t_s.axes]
 
