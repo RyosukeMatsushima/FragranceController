@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from copy import copy
 import tensorflow as tf
+from tqdm import tqdm
 from src.TopologicalSpace import TopologicalSpace
 
 # for save input space
@@ -24,7 +25,7 @@ class InputCalculator:
         print("u_P_set")
         print(u_P_set)
 
-        self.target_coodinate = (1.0, 0.)
+        self.target_coodinate = (0., 0.)
         self._simulate_time = 0.
 
         self.astablishment_space = copy(self.t_s.astablishment_space)
@@ -95,12 +96,15 @@ class InputCalculator:
         self.simTimeToLim()
         self.update_astablishment_space()
         self.save_astablishment_space(self.t_s.astablishment_space)
+
+    def getInputSpace(self):
         gradient_matrix = self.t_s.gradient_matrix()
         input_space = np.zeros([len(axis.elements) for axis in self.t_s.axes])
         pos_TS_elements = self.t_s.pos_TS_elements()
+        self.t_s.show_quiver(gradient_matrix)
 
-        for pos_TS in pos_TS_elements:
-            gradient = gradient_matrix[self.t_s.pos_TS2pos_AS(pos_TS)]
+        for pos_TS in tqdm(pos_TS_elements):
+            gradient = -gradient_matrix[self.t_s.pos_TS2pos_AS(pos_TS)]
             dot_list = np.array([np.dot(gradient, self.norm_velosity(pos_TS, input)) for input in self.u_set])
             proposal_input = self.u_set[np.where(dot_list == max(dot_list))]
             if len(proposal_input) is not 1:
@@ -123,10 +127,6 @@ class InputCalculator:
         self.simTimeToLim()
         self.update_astablishment_space()
         self.save_astablishment_space(self.t_s.astablishment_space)
-
-        for i in range(10):
-            max_val = 1 * 10 ** (- i)
-            self.t_s.show_astablishment_space_in_range("theta", "theta_dot", [0, 0], max_val)
 
     def simTimeToLim(self):
         # e, v = tf.linalg.eigh(self.stochastic_matrix)

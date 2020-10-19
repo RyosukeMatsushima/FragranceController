@@ -199,3 +199,33 @@ class TopologicalSpace:
 
         plt.colorbar()
         plt.show()
+
+    def show_concentration_img_with_tragectory(self, axis1: Axis, axis2: Axis, concentration, data1, data2):
+        fig = plt.figure(figsize=(7,5))
+        ax = fig.subplots()
+        ex = [axis1.min, axis1.max, axis2.min, axis2.max]
+        ax.imshow(np.flip(concentration.T, 0),extent=ex,interpolation='nearest',cmap='Blues',aspect=(axis1.max-axis1.min)/(axis2.max-axis2.min),alpha=1)
+
+        ax.plot(data1, data2, linewidth=1, color="crimson")
+        ax.set_xlabel(r"$\theta$ [rad]") #TODO: appley other axis
+        ax.set_ylabel(r"$\dot \theta$ [rad/s]")
+        plt.show()
+
+    def show_quiver(self, gradient_matrix):
+        fig, ax = plt.subplots()
+        x1_n = int(len(self.axes[0].elements)/40)
+        x2_n = int(len(self.axes[1].elements)/40)
+        fig_x1_set = self.axes[0].elements[::x1_n]
+        fig_x2_set = self.axes[1].elements[::x2_n]
+        fig_velocoty_x1_dot_set = np.zeros((len(fig_x1_set), len(fig_x2_set)))
+        fig_velocoty_x2_dot_set = np.zeros((len(fig_x1_set), len(fig_x2_set)))
+        for i, x1 in enumerate(fig_x1_set):
+            for j, x2 in enumerate(fig_x2_set):
+                pos_TS = [x1, x2]
+                fig_velocoty_x1_dot_set[i][j] = gradient_matrix[self.coodinate2pos_AS(pos_TS), 0]
+                fig_velocoty_x2_dot_set[i][j] = gradient_matrix[self.coodinate2pos_AS(pos_TS), 1]
+
+        q = ax.quiver(fig_x1_set, fig_x2_set, fig_velocoty_x1_dot_set.T, fig_velocoty_x2_dot_set.T)
+        ax.quiverkey(q, X=0.3, Y=1.1, U=10, label='Quiver key, length = 10', labelpos='E')
+
+        plt.show()
