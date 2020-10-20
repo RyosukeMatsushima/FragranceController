@@ -80,7 +80,7 @@ class TopologicalSpace:
 
 # calcurate stochastic_matrix using windward difference method
 # TODO: find refarence
-    def stochastic_matrix(self, input, is_time_reversal: bool):
+    def stochastic_matrix(self, input, is_time_reversal: bool, scale):
         stochastic_matrix = np.zeros((self.element_count, self.element_count))
         pos_TS_elements = self.pos_TS_elements()
         time_direction = -1.0 if is_time_reversal else 1.0
@@ -101,12 +101,12 @@ class TopologicalSpace:
                     pos[i] += 1
                 else:
                     pos[i] -= 1
-                stochastic_matrix[self.pos_TS2pos_AS(pos)][self.pos_TS2pos_AS(pos_TS)] = abs(courant_number)
+                stochastic_matrix[self.pos_TS2pos_AS(pos)][self.pos_TS2pos_AS(pos_TS)] = abs(courant_number) * scale
                 p_remain_pos -= abs(courant_number)
 
             if p_remain_pos < 0:
                 raise ArithmeticError("p_remain_pos is under zero")
-            stochastic_matrix[self.pos_TS2pos_AS(pos_TS)][self.pos_TS2pos_AS(pos_TS)] = p_remain_pos
+            stochastic_matrix[self.pos_TS2pos_AS(pos_TS)][self.pos_TS2pos_AS(pos_TS)] = p_remain_pos * scale
 
         return stochastic_matrix
 
