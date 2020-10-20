@@ -9,7 +9,7 @@ from src.Axis import Axis
 import os
 import json
 
-num = 33
+num = 37
 path = "./input_space/input_space" + str(num)
 os.chdir(path)
 

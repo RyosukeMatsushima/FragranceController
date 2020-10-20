@@ -97,14 +97,34 @@ class InputCalculator:
         self.update_astablishment_space()
         self.save_astablishment_space(self.t_s.astablishment_space)
 
-    def getInputSpace(self):
+    def method2(self):
+        threshold_param = 0.2
+        self.t_s.astablishment_space.fill(0.0)
+        self.astablishment_space.fill(0.0)
+
+        for i in tqdm(range(10000)):
+            self.update_astablishment_space()
+            threshold = self.t_s.astablishment_space.max() * threshold_param
+            self.astablishment_space[np.where((self.t_s.astablishment_space > threshold) & (self.astablishment_space == 0.0))] = self._simulate_time
+            self.simulate()
+            # if i % 1000 == 0:
+            #     save = self.t_s.astablishment_space
+            #     self.t_s.astablishment_space = self.astablishment_space
+            #     self.t_s.show_astablishment_space("theta", "theta_dot", [0, 0])
+            #     self.t_s.astablishment_space = save
+        self.t_s.astablishment_space = self.astablishment_space
+        self.t_s.show_astablishment_space("theta", "theta_dot", [0, 0])
+        self.save_astablishment_space(self.t_s.astablishment_space)
+
+    def getInputSpace(self, to_high: bool):
+        direction = -1.0 if to_high else 1.0
         gradient_matrix = self.t_s.gradient_matrix()
         input_space = np.zeros([len(axis.elements) for axis in self.t_s.axes])
         pos_TS_elements = self.t_s.pos_TS_elements()
         self.t_s.show_quiver(gradient_matrix)
 
         for pos_TS in tqdm(pos_TS_elements):
-            gradient = -gradient_matrix[self.t_s.pos_TS2pos_AS(pos_TS)]
+            gradient = direction * gradient_matrix[self.t_s.pos_TS2pos_AS(pos_TS)]
             dot_list = np.array([np.dot(gradient, self.norm_velosity(pos_TS, input)) for input in self.u_set])
             proposal_input = self.u_set[np.where(dot_list == max(dot_list))]
             if len(proposal_input) is not 1:

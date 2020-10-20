@@ -9,7 +9,7 @@ import os
 import json
 
 init_dir = os.getcwd()
-num = 2
+num = 6
 path = "./astablishment_space/astablishment_space" + str(num)
 os.chdir(path)
 
@@ -30,4 +30,4 @@ for i in range(1):
 
 os.chdir(init_dir)
 inputCalculator = InputCalculator(t_s)
-inputCalculator.getInputSpace()
+inputCalculator.getInputSpace(False)

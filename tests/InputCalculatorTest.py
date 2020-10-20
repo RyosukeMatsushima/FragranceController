@@ -6,7 +6,7 @@ from src.Axis import Axis
 axes = (Axis("theta", -1.0, 7.0, 0.1), Axis("theta_dot", -10.0, 10.0, 0.05))
 t_s = TopologicalSpace(*axes)
 inputCalculator = InputCalculator(t_s)
-inputCalculator.method_save_astablishment_space()
+inputCalculator.method2()
 # inputCalculator.update_astablishment_space()
 # inputCalculator.t_s.show_plot("theta", "theta_dot", [0, 0])
 
