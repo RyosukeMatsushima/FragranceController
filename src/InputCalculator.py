@@ -28,14 +28,25 @@ class InputCalculator:
         self.target_coodinate = (0., 0.)
         self._simulate_time = 0.
 
+        print("31")
         self.astablishment_space = copy(self.t_s.astablishment_space)
+        print("32")
         self.astablishment_space[self.t_s.coodinate2pos_AS(self.target_coodinate)] = 1.0 # set target coodinate
+        print("33")
         self.astablishment_space_tf = tf.Variable(np.array([self.astablishment_space]).T, dtype=tf.float32)
+        print("34")
 
-        self.stochastic_matrix = [ u_P_set[i] * self.t_s.stochastic_matrix(u, is_time_reversal) for i, u in enumerate(self.u_set)]
-        self.stochastic_matrix = sum(self.stochastic_matrix)
+        self.stochastic_matrix = np.zeros(self.t_s.stochastic_matrix(self.moderate_u, is_time_reversal, 1).shape)
+        print("35")
+        for i, u in enumerate(self.u_set):
+            print("36.1")
+            save = self.t_s.stochastic_matrix(u, is_time_reversal, u_P_set[i])
+            print("36.5")
+            self.stochastic_matrix += save
+            print("37")
 
         self.stochastic_matrix_tf = tf.constant(self.stochastic_matrix, dtype=tf.float32)
+        print("38")
 
     def simulate(self):
         self.astablishment_space_tf.assign(tf.matmul(self.stochastic_matrix_tf, self.astablishment_space_tf))
