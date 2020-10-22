@@ -80,33 +80,35 @@ class TopologicalSpace:
 
 # calcurate stochastic_matrix using windward difference method
 # TODO: find refarence
-    def stochastic_matrix(self, input, is_time_reversal: bool, scale):
+    def stochastic_matrix(self, is_time_reversal: bool, input_set, input_P_set):
         stochastic_matrix = np.zeros((self.element_count, self.element_count))
         pos_TS_elements = self.pos_TS_elements()
         time_direction = -1.0 if is_time_reversal else 1.0
         for pos_TS in pos_TS_elements:
-            if self.is_edge_of_TS(pos_TS):
-                continue
-            velosites = time_direction * self.model.dynamics(*self.pos_TS2coodinate(pos_TS), input) # velosity as a vector
+            for i, input in enumerate(input_set):
+                input_P = input_P_set[i]
+                if self.is_edge_of_TS(pos_TS):
+                    continue
+                velosites = time_direction * self.model.dynamics(*self.pos_TS2coodinate(pos_TS), input) # velosity as a vector
 
-            p_remain_pos = 1.0    #P(pos_i, t + delta_t | pos_i, t)
-            for i in range(len(pos_TS)):
-                velosity = velosites[i]
-                step = self.axes[i].get_step(pos_TS[i])
-                courant_number = velosity * self.delta_t / step
+                p_remain_pos = 1.0    #P(pos_i, t + delta_t | pos_i, t)
+                for i in range(len(pos_TS)):
+                    velosity = velosites[i]
+                    step = self.axes[i].get_step(pos_TS[i])
+                    courant_number = velosity * self.delta_t / step
 
-                pos = pos_TS[:]
-                pos = list(pos)
-                if courant_number > 0:
-                    pos[i] += 1
-                else:
-                    pos[i] -= 1
-                stochastic_matrix[self.pos_TS2pos_AS(pos)][self.pos_TS2pos_AS(pos_TS)] = abs(courant_number) * scale
-                p_remain_pos -= abs(courant_number)
+                    pos = pos_TS[:]
+                    pos = list(pos)
+                    if courant_number > 0:
+                        pos[i] += 1
+                    else:
+                        pos[i] -= 1
+                    stochastic_matrix[self.pos_TS2pos_AS(pos)][self.pos_TS2pos_AS(pos_TS)] += abs(courant_number) * input_P
+                    p_remain_pos -= abs(courant_number)
 
-            if p_remain_pos < 0:
-                raise ArithmeticError("p_remain_pos is under zero")
-            stochastic_matrix[self.pos_TS2pos_AS(pos_TS)][self.pos_TS2pos_AS(pos_TS)] = p_remain_pos * scale
+                if p_remain_pos < 0:
+                    raise ArithmeticError("p_remain_pos is under zero")
+                stochastic_matrix[self.pos_TS2pos_AS(pos_TS)][self.pos_TS2pos_AS(pos_TS)] += p_remain_pos * input_P
 
         return stochastic_matrix
 
