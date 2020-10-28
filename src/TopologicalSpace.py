@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
+from tempfile import mkdtemp
+import os.path as path
+
 from src.Axis import Axis
 from src.submodule.PhysicsSimulator.SinglePendulum.SinglePendulum import SinglePendulum
 
@@ -46,6 +49,14 @@ class TopologicalSpace:
             pos += pos_TS[i] * step
         return pos
 
+    def pos_AS2pos_TS(self, pos_AS):    #TODO: recheck
+        pos = pos_AS
+        pos_TS = []
+        for axis in self.axes:
+            pos_TS.append(int(pos/len(axis.elements)))
+            pos = pos % len(axis.elements)
+        return pos_TS
+
     def _times_all(self, l):
         val = 1
         for i in l:
@@ -81,7 +92,8 @@ class TopologicalSpace:
 # calcurate stochastic_matrix using windward difference method
 # TODO: find refarence
     def stochastic_matrix(self, is_time_reversal: bool, input_set, input_P_set):
-        stochastic_matrix = np.zeros((self.element_count, self.element_count))
+        filename = path.join(mkdtemp(), 'stochastic_matrix.dat')
+        stochastic_matrix = np.memmap(filename, dtype='float32', mode='w+', shape=(self.element_count, self.element_count))
         pos_TS_elements = self.pos_TS_elements()
         time_direction = -1.0 if is_time_reversal else 1.0
         for pos_TS in pos_TS_elements:
