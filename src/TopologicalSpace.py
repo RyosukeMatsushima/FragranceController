@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import itertools
 from tempfile import mkdtemp
 import os.path as path
+from tqdm import tqdm
 
 from src.Axis import Axis
 from src.submodule.PhysicsSimulator.SinglePendulum.SinglePendulum import SinglePendulum
@@ -19,7 +20,8 @@ class TopologicalSpace:
         self.model = SinglePendulum(3, 0, mass=0.6, length=2, drag=0.1)
         self.axes = axes
         self.element_count = self._element_count(self.axes)
-        self.astablishment_space = np.zeros(self.element_count)
+        filename = path.join(mkdtemp(), 'astablishment_space.dat')
+        self.astablishment_space = np.memmap(filename, dtype='float32', mode='w+', shape=self.element_count)
 
         # parameter set
         self.delta_t = 0.001
@@ -92,11 +94,12 @@ class TopologicalSpace:
 # calcurate stochastic_matrix using windward difference method
 # TODO: find refarence
     def stochastic_matrix(self, is_time_reversal: bool, input_set, input_P_set):
+        print("calculate stochastic_matrix")
         filename = path.join(mkdtemp(), 'stochastic_matrix.dat')
         stochastic_matrix = np.memmap(filename, dtype='float32', mode='w+', shape=(self.element_count, self.element_count))
         pos_TS_elements = self.pos_TS_elements()
         time_direction = -1.0 if is_time_reversal else 1.0
-        for pos_TS in pos_TS_elements:
+        for pos_TS in tqdm(pos_TS_elements):
             for i, input in enumerate(input_set):
                 input_P = input_P_set[i]
                 if self.is_edge_of_TS(pos_TS):

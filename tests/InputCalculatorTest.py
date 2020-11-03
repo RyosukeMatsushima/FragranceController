@@ -5,7 +5,7 @@ from src.Axis import Axis
 
 axes = (Axis("theta", -1.0, 7.0, 0.1), Axis("theta_dot", -10.0, 10.0, 0.05))
 t_s = TopologicalSpace(*axes)
-inputCalculator = InputCalculator(t_s)
+inputCalculator = InputCalculator(t_s, (0, 0))
 # inputCalculator.method0()
 inputCalculator.method2(0.024, 100)
 # inputCalculator.update_astablishment_space()
