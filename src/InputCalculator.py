@@ -12,7 +12,7 @@ import json
 import datetime
 
 class InputCalculator:
-    def __init__(self, t_s: TopologicalSpace):
+    def __init__(self, t_s: TopologicalSpace, target_coodinate):
         self.t_s = t_s
         is_time_reversal = True
 
@@ -25,7 +25,7 @@ class InputCalculator:
         print("u_P_set")
         print(u_P_set)
 
-        self.target_coodinate = (0., 0.)
+        self.target_coodinate = target_coodinate
         self._simulate_time = 0.
 
         self.astablishment_space = copy(self.t_s.astablishment_space)
