@@ -150,8 +150,7 @@ class InputCalculator:
         # print(e)
         #TODO: check all e element is under 1.0
 
-        eye = np.eye(self.t_s.element_count, self.t_s.element_count, dtype=float)
-        eye_tf = tf.constant(eye, dtype=tf.float32)
+        eye_tf = tf.eye(self.t_s.element_count, dtype=tf.float32)
         val1 = tf.linalg.inv(self.stochastic_matrix_tf - eye_tf)
         self.astablishment_space_tf.assign(- self.stochastic_matrix_tf @ val1 @ self.astablishment_space_tf)
 
