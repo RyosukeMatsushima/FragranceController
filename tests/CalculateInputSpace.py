@@ -29,5 +29,6 @@ for i in range(1):
     t_s.show_astablishment_space_in_range("theta", "theta_dot", [0, 0], max_val)
 
 os.chdir(init_dir)
-inputCalculator = InputCalculator(t_s)
+graph_center = ["theta", "theta_dot", [0, 0]]
+inputCalculator = InputCalculator(t_s, (0, 0), graph_center)
 inputCalculator.getInputSpace(False)

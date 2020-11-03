@@ -12,8 +12,9 @@ import json
 import datetime
 
 class InputCalculator:
-    def __init__(self, t_s: TopologicalSpace, target_coodinate):
+    def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg):
         self.t_s = t_s
+        self.graph_arg = graph_arg
         is_time_reversal = True
 
         d = 1.
@@ -52,7 +53,7 @@ class InputCalculator:
     def method0(self):
 
         self.update_astablishment_space()
-        self.t_s.show_astablishment_space("theta", "theta_dot", [0, 0])
+        self.t_s.show_astablishment_space(*self.graph_arg)
         self.t_s.model.state = self.target_coodinate
         columns = ["time"] + [axis.name for axis in self.t_s.axes]
         df = pd.DataFrame(columns=columns)
@@ -65,7 +66,6 @@ class InputCalculator:
                 df = df.append(tmp_se, ignore_index=True)
 
             self.update_astablishment_space()
-            self.t_s.show_astablishment_space_with_tragectory("theta", "theta_dot", [0, 0], df["theta"], df["theta_dot"])
         gradient_matrix = self.t_s.gradient_matrix()
         input_space = np.zeros([len(axis.elements) for axis in self.t_s.axes])
         pos_TS_elements = self.t_s.pos_TS_elements()
@@ -107,10 +107,10 @@ class InputCalculator:
             if i % 50 == 0:
                 save = self.t_s.astablishment_space
                 self.t_s.astablishment_space = self.astablishment_space
-                self.t_s.show_astablishment_space("theta", "theta_dot", [0, 0])
+                self.t_s.show_astablishment_space(*self.graph_arg)
                 self.t_s.astablishment_space = save
         self.t_s.astablishment_space = self.astablishment_space
-        self.t_s.show_astablishment_space("theta", "theta_dot", [0, 0])
+        self.t_s.show_astablishment_space(*self.graph_arg)
         self.save_astablishment_space(self.t_s.astablishment_space)
 
     def getInputSpace(self, to_high: bool):
