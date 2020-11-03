@@ -32,10 +32,7 @@ class InputCalculator:
         self.astablishment_space[self.t_s.coodinate2pos_AS(self.target_coodinate)] = 1.0 # set target coodinate
         self.astablishment_space_tf = tf.Variable(np.array([self.astablishment_space]).T, dtype=tf.float32)
 
-        self.stochastic_matrix = np.zeros(self.t_s.stochastic_matrix(u, is_time_reversal, 1).shape)
-        for i, u in enumerate(self.u_set):
-            self.stochastic_matrix += self.t_s.stochastic_matrix(u, is_time_reversal, u_P_set[i])
-
+        self.stochastic_matrix = self.t_s.stochastic_matrix(is_time_reversal, self.u_set, u_P_set)
         self.stochastic_matrix_tf = tf.constant(self.stochastic_matrix, dtype=tf.float32)
 
     def simulate(self):
@@ -98,21 +95,20 @@ class InputCalculator:
         self.update_astablishment_space()
         self.save_astablishment_space(self.t_s.astablishment_space)
 
-    def method2(self):
-        threshold_param = 0.2
+    def method2(self, threshold_param, trains_num):
         self.t_s.astablishment_space.fill(0.0)
         self.astablishment_space.fill(0.0)
 
-        for i in tqdm(range(10000)):
+        for i in tqdm(range(trains_num)):
             self.update_astablishment_space()
             threshold = self.t_s.astablishment_space.max() * threshold_param
             self.astablishment_space[np.where((self.t_s.astablishment_space > threshold) & (self.astablishment_space == 0.0))] = self._simulate_time
             self.simulate()
-            # if i % 1000 == 0:
-            #     save = self.t_s.astablishment_space
-            #     self.t_s.astablishment_space = self.astablishment_space
-            #     self.t_s.show_astablishment_space("theta", "theta_dot", [0, 0])
-            #     self.t_s.astablishment_space = save
+            if i % 50 == 0:
+                save = self.t_s.astablishment_space
+                self.t_s.astablishment_space = self.astablishment_space
+                self.t_s.show_astablishment_space("theta", "theta_dot", [0, 0])
+                self.t_s.astablishment_space = save
         self.t_s.astablishment_space = self.astablishment_space
         self.t_s.show_astablishment_space("theta", "theta_dot", [0, 0])
         self.save_astablishment_space(self.t_s.astablishment_space)

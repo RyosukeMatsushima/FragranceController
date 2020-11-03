@@ -8,6 +8,7 @@ class Simulator:
     def __init__(self, t_s: TopologicalSpace, input_space):
         self.t_s = t_s
         self.input_space = input_space
+        self.time_range = 20
 
     # start simulation
     def do(self):
@@ -15,7 +16,7 @@ class Simulator:
 
         time = 0.
         dt = 10**(-2)
-        max_step = 20 * 10**(2) + 1
+        max_step = int(self.time_range * 10**(2) + 1)
         columns = ["time"] + [axis.name for axis in self.t_s.axes] + ["input"]
 
         df = pd.DataFrame(columns=columns)
