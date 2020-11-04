@@ -184,6 +184,7 @@ class InputCalculator:
                 with open('param.json', 'w') as json_file:
                     json.dump(param, json_file)
                 break
+        os.chdir("../../")
 
     def save_astablishment_space(self, astablishment_space):
         dt_now = datetime.datetime.now()
@@ -211,6 +212,7 @@ class InputCalculator:
                 with open('param.json', 'w') as json_file:
                     json.dump(param, json_file)
                 break
+        os.chdir("../../")
 
     def save_stochastic_matrix(self, stochastic_matrix):
         dt_now = datetime.datetime.now()
@@ -238,3 +240,4 @@ class InputCalculator:
                 with open('param.json', 'w') as json_file:
                     json.dump(param, json_file)
                 break
+        os.chdir("../../")
