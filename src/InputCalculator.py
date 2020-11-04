@@ -15,26 +15,30 @@ class InputCalculator:
     def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg):
         self.t_s = t_s
         self.graph_arg = graph_arg
-        is_time_reversal = True
+        self.is_time_reversal = True
 
         d = 1.
         self.u_set = np.arange(-2., 2. + d, d)
         # self.u_set = np.array([0.])
         self.moderate_u = 0
         u_P_list = np.full(self.u_set.shape, 1.)
-        u_P_set = u_P_list/u_P_list.sum()
+        self.u_P_set = u_P_list/u_P_list.sum()
         print("u_P_set")
-        print(u_P_set)
+        print(self.u_P_set)
 
         self.target_coodinate = target_coodinate
         self._simulate_time = 0.
-
         self.astablishment_space = copy(self.t_s.astablishment_space)
         self.astablishment_space[self.t_s.coodinate2pos_AS(self.target_coodinate)] = 1.0 # set target coodinate
         self.astablishment_space_tf = tf.Variable(np.array([self.astablishment_space]).T, dtype=tf.float32)
 
-        self.stochastic_matrix = self.t_s.stochastic_matrix(is_time_reversal, self.u_set, u_P_set)
-        self.stochastic_matrix_tf = tf.constant(self.stochastic_matrix, dtype=tf.float32)
+    def init_stochastic_matrix(self):
+        stochastic_matrix = self.t_s.stochastic_matrix(self.is_time_reversal, self.u_set, self.u_P_set)
+        self.stochastic_matrix_tf = tf.constant(stochastic_matrix, dtype=tf.float32)
+        self.save_stochastic_matrix(stochastic_matrix)
+
+    def set_stochastic_matrix(self, stochastic_matrix):
+        self.stochastic_matrix_tf = tf.constant(stochastic_matrix, dtype=tf.float32)
 
     def simulate(self):
         self.astablishment_space_tf.assign(tf.matmul(self.stochastic_matrix_tf, self.astablishment_space_tf))
@@ -181,7 +185,6 @@ class InputCalculator:
                     json.dump(param, json_file)
                 break
 
-
     def save_astablishment_space(self, astablishment_space):
         dt_now = datetime.datetime.now()
 
@@ -196,6 +199,33 @@ class InputCalculator:
                 os.mkdir(path)
                 os.chdir(path)
                 np.save("astablishment_space", astablishment_space)
+                model_param = self.t_s.model.get_param()
+                axes = [axis.get_param() for axis in self.t_s.axes]
+
+                param = {
+                        "datetime": str(dt_now),
+                        "axes": axes,
+                        "model_param": model_param
+                        }
+
+                with open('param.json', 'w') as json_file:
+                    json.dump(param, json_file)
+                break
+
+    def save_stochastic_matrix(self, stochastic_matrix):
+        dt_now = datetime.datetime.now()
+
+        file_list = glob.glob("./stochastic_matrix/*")
+
+        n = 1
+        while(True):
+            path = "./stochastic_matrix/stochastic_matrix" + str(n)
+            n += 1
+            if not path in file_list:
+                print(path)
+                os.mkdir(path)
+                os.chdir(path)
+                np.save("stochastic_matrix", stochastic_matrix)
                 model_param = self.t_s.model.get_param()
                 axes = [axis.get_param() for axis in self.t_s.axes]
 
