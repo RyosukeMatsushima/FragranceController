@@ -237,7 +237,11 @@ class InputCalculator:
                 print(path)
                 os.mkdir(path)
                 os.chdir(path)
-                np.save("stochastic_matrix", stochastic_matrix)
+
+                for i in range(self.t_s.element_count):
+                    space_name = "stochastic_matrix" + str(i)
+                    np.save(space_name, stochastic_matrix[i])
+
                 model_param = self.t_s.model.get_param()
                 axes = [axis.get_param() for axis in self.t_s.axes]
 
@@ -251,3 +255,16 @@ class InputCalculator:
                     json.dump(param, json_file)
                 break
         os.chdir("../../")
+
+    def load_stochastic_matrix(self, num):
+        print("load_stochastic_matrix")
+        stochastic_matrix_path = "./stochastic_matrix/stochastic_matrix" + str(num)
+        os.chdir(stochastic_matrix_path)
+        filename = path.join(mkdtemp(), 'stochastic_matrix.dat')
+        stochastic_matrix = np.memmap(filename, dtype='float32', mode='w+', shape=(self.t_s.element_count, self.t_s.element_count))
+
+        for i in tqdm(range(self.t_s.element_count)):
+            name = "stochastic_matrix" + str(i) + ".npy"
+            stochastic_matrix[i] = np.load(name)
+        print("load_stochastic_matrix end")
+        return stochastic_matrix

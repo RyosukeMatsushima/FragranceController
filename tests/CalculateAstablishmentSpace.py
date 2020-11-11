@@ -9,11 +9,10 @@ import os
 import json
 
 init_dir = os.getcwd()
-num = 1
+num = 6
 path = "./stochastic_matrix/stochastic_matrix" + str(num)
 os.chdir(path)
 
-stochastic_matrix = np.load("stochastic_matrix.npy")
 with open('param.json', 'r') as json_file:
     json_data = json.load(json_file)
 os.chdir("../../")
@@ -25,6 +24,7 @@ print(axes)
 t_s = TopologicalSpace(*axes)
 graph_center = ["theta", "theta_dot", [0, 0]]
 inputCalculator = InputCalculator(t_s, (0, 0), graph_center)
+stochastic_matrix = inputCalculator.load_stochastic_matrix(num)
 inputCalculator.set_stochastic_matrix(stochastic_matrix)
 
 inputCalculator.init_eye()
