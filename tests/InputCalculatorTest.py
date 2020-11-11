@@ -8,8 +8,9 @@ t_s = TopologicalSpace(*axes)
 graph_center = ["theta", "theta_dot", [0, 0]]
 inputCalculator = InputCalculator(t_s, (0, 0), graph_center)
 inputCalculator.init_stochastic_matrix()
-# inputCalculator.method0()
-inputCalculator.method2(0.024, 100)
+inputCalculator.init_eye()
+inputCalculator.method1()
+# inputCalculator.method2(0.024, 100)
 # inputCalculator.update_astablishment_space()
 # inputCalculator.t_s.show_plot("theta", "theta_dot", [0, 0])
 

@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from copy import copy
 import tensorflow as tf
+from tempfile import mkdtemp
+import os.path as path
 from tqdm import tqdm
 from src.TopologicalSpace import TopologicalSpace
 
@@ -36,6 +38,14 @@ class InputCalculator:
         stochastic_matrix = self.t_s.stochastic_matrix(self.is_time_reversal, self.u_set, self.u_P_set)
         self.stochastic_matrix_tf = tf.constant(stochastic_matrix, dtype=tf.float32)
         self.save_stochastic_matrix(stochastic_matrix)
+
+    def init_eye(self):
+        print("init_eye")
+        filename = path.join(mkdtemp(), 'eye_mat.dat')
+        eye_mat = np.memmap(filename, dtype='float32', mode='w+', shape=(self.t_s.element_count, self.t_s.element_count))
+        for i in tqdm(range(self.t_s.element_count)):
+            eye_mat[i][i] = 1.
+        self.eye_tf = tf.constant(eye_mat, dtype=tf.float32)
 
     def set_stochastic_matrix(self, stochastic_matrix):
         self.stochastic_matrix_tf = tf.constant(stochastic_matrix, dtype=tf.float32)
@@ -149,13 +159,12 @@ class InputCalculator:
         self.update_astablishment_space()
         self.save_astablishment_space(self.t_s.astablishment_space)
 
+    @tf.function
     def simTimeToLim(self):
         # e, v = tf.linalg.eigh(self.stochastic_matrix)
         # print(e)
         #TODO: check all e element is under 1.0
-
-        eye_tf = tf.eye(self.t_s.element_count, dtype=tf.float32)
-        val1 = tf.linalg.inv(self.stochastic_matrix_tf - eye_tf)
+        val1 = tf.linalg.inv(self.stochastic_matrix_tf - self.eye_tf)
         self.astablishment_space_tf.assign(- self.stochastic_matrix_tf @ val1 @ self.astablishment_space_tf)
 
     def save_input_space(self, input_space):

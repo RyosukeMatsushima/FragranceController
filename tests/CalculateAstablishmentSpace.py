@@ -27,5 +27,6 @@ graph_center = ["theta", "theta_dot", [0, 0]]
 inputCalculator = InputCalculator(t_s, (0, 0), graph_center)
 inputCalculator.set_stochastic_matrix(stochastic_matrix)
 
-# inputCalculator.method0()
-inputCalculator.method2(0.024, 100)
+inputCalculator.init_eye()
+inputCalculator.method1()
+# inputCalculator.method2(0.024, 100)
