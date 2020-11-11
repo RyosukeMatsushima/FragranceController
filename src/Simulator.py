@@ -40,4 +40,4 @@ class Simulator:
             df = df.append(tmp_se, ignore_index=True)
             model.step(dt)
 
-        self.t_s.show_concentration_img_with_tragectory(self.t_s.axes[0], self.t_s.axes[1], self.input_space, df["theta"], df["theta_dot"])
+        return df

@@ -26,4 +26,5 @@ t_s = TopologicalSpace(*axes)
 t_s.show_concentration_img(axes[0], axes[1], input_space)
 
 simulator = Simulator(t_s, input_space)
-simulator.do()
+df = simulator.do()
+simulator.t_s.show_concentration_img_with_tragectory(simulator.t_s.axes[0], simulator.t_s.axes[1], simulator.input_space, df["theta"], df["theta_dot"])
