@@ -34,10 +34,11 @@ class InputCalculator:
         self.astablishment_space[self.t_s.coodinate2pos_AS(self.target_coodinate)] = 1.0 # set target coodinate
         self.astablishment_space_tf = tf.Variable(np.array([self.astablishment_space]).T, dtype=tf.float32)
 
-    def init_stochastic_matrix(self):
+    def init_stochastic_matrix(self, save: bool):
         stochastic_matrix = self.t_s.stochastic_matrix(self.is_time_reversal, self.u_set, self.u_P_set)
         self.stochastic_matrix_tf = tf.constant(stochastic_matrix, dtype=tf.float32)
-        self.save_stochastic_matrix(stochastic_matrix)
+        if save:
+            self.save_stochastic_matrix(stochastic_matrix)
 
     def init_eye(self):
         print("init_eye")
