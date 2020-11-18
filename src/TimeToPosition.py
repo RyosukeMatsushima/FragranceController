@@ -17,8 +17,10 @@ class TimeToPosition(InputCalculator):
 
         self.time_list = np.array([0.0])
         self.pos_list = np.array([self.t_s.coodinate2pos_TS(self.target_coodinate)])
-        self.last_plot_time = 0.
+        self.last_direction_list = np.array([0])
+        self.continuous_time_list = np.array([0.0])
 
+        self.last_plot_time = 0.
         self.max_simulation_time = 10
 
     def method3(self):
@@ -26,12 +28,14 @@ class TimeToPosition(InputCalculator):
             element_num = np.argmin(self.time_list, axis=0)
             self._simulate_time = self.time_list[element_num]
             pos_TS = self.pos_list[element_num]
+            last_direction = self.last_direction_list[element_num]
+            continuous_time = self.continuous_time_list[element_num]
             self.delete_element(pos_TS)
 
             if self.t_s.is_edge_of_TS(pos_TS):
                 continue
             if self.write_time(pos_TS, self._simulate_time):
-                self.next_elements(pos_TS)
+                self.next_elements(pos_TS, last_direction, continuous_time)
 
             if (self._simulate_time - self.last_plot_time) > 1:
                 self.t_s.show_astablishment_space(*self.graph_arg)
@@ -49,37 +53,56 @@ class TimeToPosition(InputCalculator):
         self.t_s.astablishment_space[pos_AS] = time
         return True
     
-    def add_element(self, pos_TS, time):
+    def add_element(self, time, pos_TS, last_direction, continuous_time):
+        # if self.t_s.astablishment_space[self.t_s.pos_TS2pos_AS(pos_TS)] != 0:
+        #     return
         self.time_list = np.append(self.time_list, time)
         self.pos_list = np.append(self.pos_list, [pos_TS], axis=0)
+        self.last_direction_list = np.append(self.last_direction_list, last_direction)
+        self.continuous_time_list = np.append(self.continuous_time_list, continuous_time)
     
     def delete_element(self, pos_TS):
         num = np.where((self.pos_list == pos_TS).all(axis=1))
         self.time_list = np.delete(self.time_list, num, 0)
         self.pos_list = np.delete(self.pos_list, num, 0)
+        self.last_direction_list = np.delete(self.last_direction_list, num, 0)
+        self.continuous_time_list = np.delete(self.continuous_time_list, num, 0)
 
-    def next_elements(self, pos_TS):
+    def next_elements(self, pos_TS, last_direction, continuous_time):
         coodinate = self.t_s.pos_TS2coodinate(pos_TS)
         print("coodinate")
         print(coodinate)
         print("self._simulate_time")
         print(self._simulate_time)
         vel_list = np.array([-self.t_s.model.dynamics(*coodinate, u) for u in self.u_set])
-        max_vel = np.max(vel_list, axis=0)
-        min_vel = np.min(vel_list, axis=0)
-        max_vel[np.where(max_vel < 0)] = 0
-        min_vel[np.where(min_vel > 0)] = 0
-        self.set_element(pos_TS, max_vel)
-        self.set_element(pos_TS, min_vel)
+        # TODO: select important vel
+        for vel in vel_list:
+            self.set_element(pos_TS, vel, last_direction, continuous_time)
 
-    def set_element(self, pos_TS, vel):
+    def set_element(self, pos_TS, vel, last_direction, continuous_time):
+        steps = [self.t_s.axes[i].get_step(pos) for i, pos in enumerate(pos_TS)]
+        is_stop = False
+        for i, step in enumerate(steps):
+            if last_direction == i:
+                continue
+            if step < continuous_time * abs(vel[i]):
+                is_stop = True
+
         for i, v in enumerate(vel):
+            if i == last_direction and is_stop:
+                continue
             if v == 0:
                 continue
             pos = copy(pos_TS)
-            step = self.t_s.axes[i].get_step(pos[i])    #TODO: applay variable step
+            step = steps[i]    #TODO: applay variable step
             if v > 0:
                 pos[i] += 1
             else:
                 pos[i] -= 1
-            self.add_element(pos, self._simulate_time + abs(step/v))
+
+            time2next = abs(step/v)
+            time = time2next
+            if i == last_direction:
+                time = continuous_time + time2next
+
+            self.add_element(self._simulate_time + time2next, pos, i, time)
