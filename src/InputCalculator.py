@@ -14,15 +14,13 @@ import json
 import datetime
 
 class InputCalculator:
-    def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg):
+    def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg, u_set, moderate_u):
         self.t_s = t_s
         self.graph_arg = graph_arg
         self.is_time_reversal = True
 
-        d = 1.
-        self.u_set = np.arange(-2., 2. + d, d)
-        # self.u_set = np.array([0.])
-        self.moderate_u = 0
+        self.u_set = u_set
+        self.moderate_u = moderate_u
         u_P_list = np.full(self.u_set.shape, 1.)
         self.u_P_set = u_P_list/u_P_list.sum()
         print("u_P_set")
