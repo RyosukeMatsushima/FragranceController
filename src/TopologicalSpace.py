@@ -154,6 +154,46 @@ class TopologicalSpace:
 
         return gradient_matrix
 
+    def gradient_matrix2(self):
+        gradient_matrix = np.zeros((self.element_count, len(self.axes)))
+        pos_TS_elements = self.pos_TS_elements()
+
+        for pos_TS in pos_TS_elements:
+            if self.is_edge_of_TS(pos_TS):
+                continue
+
+            time_list = np.zeros(len(pos_TS))
+            for i in range(len(pos_TS)): #TODO: turn to list first
+                pre_pos = list(pos_TS[:])
+                pre_pos[i] -= 1
+                follow_pos = list(pos_TS[:])
+                follow_pos[i] += 1
+
+                if (follow_pos[i] - pre_pos[i]) is not 2:
+                    ArithmeticError("gradient_matrix is wrong") #TODO: remove sometimes
+
+                pre_val = self.astablishment_space[self.pos_TS2pos_AS(pre_pos)]
+                follow_val = self.astablishment_space[self.pos_TS2pos_AS(follow_pos)]
+                val = 0.0
+                direction = 0.0
+                if pre_val < follow_val:
+                    val = pre_val
+                    direction = -1.0
+                else:
+                    val = follow_val
+                    direction = 1.0
+                if val == 0:
+                    continue
+                time_list[i] = val
+                gradient_matrix[self.pos_TS2pos_AS(pos_TS), i] = direction
+
+            min_time = np.min(time_list)
+            if min_time == 0.0:
+                continue
+            gradient_matrix[self.pos_TS2pos_AS(pos_TS), np.where( time_list != min_time )] = 0.0
+
+        return gradient_matrix
+
     def axis_name2axis(self, name):
         axis_index_list = [i for i, axis in enumerate(self.axes) if axis.name == name]
         if len(axis_index_list) is not 1:

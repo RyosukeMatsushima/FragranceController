@@ -30,6 +30,10 @@ class TimeToPosition(InputCalculator):
             pos_TS = self.pos_list[element_num]
             last_direction = self.last_direction_list[element_num]
             continuous_time = self.continuous_time_list[element_num]
+            # print("last_direction")
+            # print(last_direction)
+            # print("continuous_time")
+            # print(continuous_time)
             self.delete_element(pos_TS)
 
             if self.t_s.is_edge_of_TS(pos_TS):
@@ -54,8 +58,8 @@ class TimeToPosition(InputCalculator):
         return True
     
     def add_element(self, time, pos_TS, last_direction, continuous_time):
-        # if self.t_s.astablishment_space[self.t_s.pos_TS2pos_AS(pos_TS)] != 0:
-        #     return
+        if self.t_s.astablishment_space[self.t_s.pos_TS2pos_AS(pos_TS)] != 0:
+            return
         self.time_list = np.append(self.time_list, time)
         self.pos_list = np.append(self.pos_list, [pos_TS], axis=0)
         self.last_direction_list = np.append(self.last_direction_list, last_direction)
@@ -63,6 +67,7 @@ class TimeToPosition(InputCalculator):
     
     def delete_element(self, pos_TS):
         num = np.where((self.pos_list == pos_TS).all(axis=1))
+        num = np.append(num, np.where(self.time_list > self._simulate_time + 1))
         self.time_list = np.delete(self.time_list, num, 0)
         self.pos_list = np.delete(self.pos_list, num, 0)
         self.last_direction_list = np.delete(self.last_direction_list, num, 0)
@@ -82,10 +87,10 @@ class TimeToPosition(InputCalculator):
     def set_element(self, pos_TS, vel, last_direction, continuous_time):
         steps = [self.t_s.axes[i].get_step(pos) for i, pos in enumerate(pos_TS)]
         is_stop = False
-        for i, step in enumerate(steps):
+        for i, v in enumerate(vel):
             if last_direction == i:
                 continue
-            if step < continuous_time * abs(vel[i]):
+            if abs(v/vel[last_direction]) > abs(steps[i]*2/continuous_time):
                 is_stop = True
 
         for i, v in enumerate(vel):
@@ -101,8 +106,10 @@ class TimeToPosition(InputCalculator):
                 pos[i] -= 1
 
             time2next = abs(step/v)
-            time = time2next
+            if is_stop:
+                time2next = 0.0
+            time = step
             if i == last_direction:
-                time = continuous_time + time2next
+                time += continuous_time
 
             self.add_element(self._simulate_time + time2next, pos, i, time)

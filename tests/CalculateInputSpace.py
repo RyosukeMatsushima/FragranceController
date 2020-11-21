@@ -9,7 +9,7 @@ import os
 import json
 
 init_dir = os.getcwd()
-num = 18
+num = 36
 path = "./astablishment_space/astablishment_space" + str(num)
 os.chdir(path)
 
@@ -34,4 +34,4 @@ d = 1.
 u_set = np.arange(-2., 2. + d, d)
 moderate_u = 0
 inputCalculator = InputCalculator(t_s, (0, 0), graph_center, u_set, moderate_u)
-inputCalculator.getInputSpace(False)
+inputCalculator.getInputSpace2(True)

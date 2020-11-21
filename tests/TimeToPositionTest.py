@@ -5,7 +5,7 @@ from src.Axis import Axis
 
 import numpy as np
 
-axes = (Axis("theta", -7.0, 7.0, 0.1), Axis("theta_dot", -10.0, 10.0, 0.1))
+axes = (Axis("theta", -10.0, 10.0, 0.01), Axis("theta_dot", -10.0, 10.0, 0.01))
 t_s = TopologicalSpace(*axes)
 graph_center = ["theta", "theta_dot", [0, 0]]
 
