@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 
-from src.InputCalculator import InputCalculator
+from src.FuildSimulator import FuildSimulator
 from src.TopologicalSpace import TopologicalSpace
 from src.Axis import Axis
 
@@ -9,7 +9,7 @@ import os
 import json
 
 init_dir = os.getcwd()
-num = 6
+num = 10
 path = "./stochastic_matrix/stochastic_matrix" + str(num)
 os.chdir(path)
 
@@ -23,10 +23,13 @@ axes = [Axis(*param) for param in axes_param_list]
 print(axes)
 t_s = TopologicalSpace(*axes)
 graph_center = ["theta", "theta_dot", [0, 0]]
-inputCalculator = InputCalculator(t_s, (0, 0), graph_center)
-stochastic_matrix = inputCalculator.load_stochastic_matrix(num)
-inputCalculator.set_stochastic_matrix(stochastic_matrix)
+d = 1.
+u_set = np.arange(-2., 2. + d, d)
+moderate_u = 0
+inputCalculator = FuildSimulator(t_s, (0, 0), graph_center, u_set, moderate_u)
+stochastic_matrix, gather_matrix = inputCalculator.load_stochastic_matrix(num)
+inputCalculator.set_stochastic_matrix(stochastic_matrix, gather_matrix)
 
-inputCalculator.init_eye()
-inputCalculator.method1()
-# inputCalculator.method2(0.024, 100)
+# inputCalculator.init_eye()
+# inputCalculator.method1()
+inputCalculator.method2(0.024, 100)

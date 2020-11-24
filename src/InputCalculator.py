@@ -117,7 +117,7 @@ class InputCalculator:
             threshold = self.t_s.astablishment_space.max() * threshold_param
             self.astablishment_space[np.where((self.t_s.astablishment_space > threshold) & (self.astablishment_space == 0.0))] = self._simulate_time
             self.simulate()
-            if i % 50 == 0:
+            if i % int(trains_num/10) == 0:
                 save = self.t_s.astablishment_space
                 self.t_s.astablishment_space = self.astablishment_space
                 self.t_s.show_astablishment_space(*self.graph_arg)

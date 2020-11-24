@@ -13,8 +13,8 @@ d = 1.
 u_set = np.arange(-2., 2. + d, d)
 moderate_u = 0
 inputCalculator = FuildSimulator(t_s, (0, 0), graph_center, u_set, moderate_u)
-inputCalculator.init_stochastic_matrix()
-inputCalculator.method2(0.024, 1000)
+inputCalculator.init_stochastic_matrix(True)
+# inputCalculator.method2(0.024, 1000)
 # inputCalculator.update_astablishment_space()
 # inputCalculator.t_s.show_plot("theta", "theta_dot", [0, 0])
 

@@ -5,6 +5,12 @@ from copy import copy
 import os.path as path
 from tqdm import tqdm
 
+# for save input space
+import os
+import glob
+import json
+import datetime
+
 from src.InputCalculator import InputCalculator
 from src.TopologicalSpace import TopologicalSpace
 
@@ -30,7 +36,7 @@ class FuildSimulator(InputCalculator):
     def update_astablishment_space(self):
         self.t_s.astablishment_space = self.astablishment_space_tf.numpy()
 
-    def init_stochastic_matrix(self):
+    def init_stochastic_matrix(self, save: bool):
         print("\n init_stochastic_matrix \n")
         filename = path.join(mkdtemp(), 'stochastic_matrix.dat')
         stochastic_matrix = np.memmap(filename, dtype='float32', mode='w+', shape=(len(self.t_s.axes) * 2 + 1, self.t_s.element_count))
@@ -81,6 +87,8 @@ class FuildSimulator(InputCalculator):
         self.gather_matrix_tf = tf.constant(gather_matrix, dtype=tf.int64)
         self.gathered_matrix_tf = tf.Variable(stochastic_matrix, dtype=tf.float32)
         # tf.fill(self.gathered_matrix_tf, 0.0)
+        if save:
+            self.save_stochastic_matrix(stochastic_matrix, gather_matrix)
         print("\n init_stochastic_matrix end \n")
 
     def simulate(self):
@@ -89,4 +97,47 @@ class FuildSimulator(InputCalculator):
         self.astablishment_space_tf.assign(tf.reduce_sum(self.stochastic_matrix_tf * self.gathered_matrix_tf, 0))
         self._simulate_time += self.t_s.delta_t
 
+    def save_stochastic_matrix(self, stochastic_matrix, gather_matrix):
+        dt_now = datetime.datetime.now()
 
+        file_list = glob.glob("./stochastic_matrix/*")
+
+        n = 1
+        while(True):
+            path = "./stochastic_matrix/stochastic_matrix" + str(n)
+            n += 1
+            if not path in file_list:
+                print(path)
+                os.mkdir(path)
+                os.chdir(path)
+
+                np.save("stochastic_matrix", stochastic_matrix)
+                np.save("gather_matrix", gather_matrix)
+
+                model_param = self.t_s.model.get_param()
+                axes = [axis.get_param() for axis in self.t_s.axes]
+
+                param = {
+                        "datetime": str(dt_now),
+                        "axes": axes,
+                        "model_param": model_param
+                        }
+
+                with open('param.json', 'w') as json_file:
+                    json.dump(param, json_file)
+                break
+        os.chdir("../../")
+
+    def load_stochastic_matrix(self, num):
+        print("load_stochastic_matrix")
+        stochastic_matrix_path = "./stochastic_matrix/stochastic_matrix" + str(num)
+        os.chdir(stochastic_matrix_path)
+        stochastic_matrix = np.load("stochastic_matrix.npy")
+        gather_matrix = np.load("gather_matrix.npy")
+        print("load_stochastic_matrix end")
+        return stochastic_matrix, gather_matrix
+
+    def set_stochastic_matrix(self, stochastic_matrix, gather_matrix):
+        self.stochastic_matrix_tf = tf.constant(stochastic_matrix, dtype=tf.float32)
+        self.gather_matrix_tf = tf.constant(gather_matrix, dtype=tf.int64)
+        self.gathered_matrix_tf = tf.Variable(stochastic_matrix, dtype=tf.float32)
