@@ -138,18 +138,16 @@ class InputCalculator:
             dot_list = np.array([np.dot(gradient, self.norm_velosity(pos_TS, input)) for input in self.u_set])
             proposal_input = self.u_set[np.where(dot_list == max(dot_list))]
             if len(proposal_input) is not 1:
-                print("sevral proposal inputs exist")
-                print(self.t_s.pos_TS2coodinate(pos_TS))
-                print(gradient) #TODO: remove print
                 if gradient[0] != 0.0:
+                    print("sevral proposal inputs exist")
+                    print("gradient")
+                    print(gradient)
+                    print("pos_TS")
+                    print(pos_TS)
                     raise TypeError("omg")
-                print(dot_list)
-                print(np.where(dot_list == max(dot_list)))
                 proposal_input = self.moderate_u
             input_space[pos_TS] = proposal_input
 
-        for input in input_space:
-            print(input)
         self.save_input_space(input_space)
         self.t_s.show_concentration_img(self.t_s.axes[0], self.t_s.axes[1], input_space)
 
