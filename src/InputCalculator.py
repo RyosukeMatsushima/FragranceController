@@ -131,7 +131,6 @@ class InputCalculator:
         gradient_matrix = self.t_s.gradient_matrix()
         input_space = np.zeros([len(axis.elements) for axis in self.t_s.axes])
         pos_TS_elements = self.t_s.pos_TS_elements()
-        self.t_s.show_quiver(gradient_matrix)
 
         for pos_TS in tqdm(pos_TS_elements):
             gradient = direction * gradient_matrix[self.t_s.pos_TS2pos_AS(pos_TS)]
