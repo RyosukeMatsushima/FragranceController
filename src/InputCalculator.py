@@ -205,7 +205,7 @@ class InputCalculator:
                 os.mkdir(path)
                 os.chdir(path)
                 np.save("input_space", input_space)
-                self.write_param
+                self.write_param()
                 break
         os.chdir("../../")
 
