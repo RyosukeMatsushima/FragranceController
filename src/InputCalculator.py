@@ -194,8 +194,6 @@ class InputCalculator:
         self.astablishment_space_tf.assign(- self.stochastic_matrix_tf @ val1 @ self.astablishment_space_tf)
 
     def save_input_space(self, input_space):
-        dt_now = datetime.datetime.now()
-
         file_list = glob.glob("./input_space/*")
 
         n = 1
@@ -207,23 +205,11 @@ class InputCalculator:
                 os.mkdir(path)
                 os.chdir(path)
                 np.save("input_space", input_space)
-                model_param = self.t_s.model.get_param()
-                axes = [axis.get_param() for axis in self.t_s.axes]
-
-                param = {
-                        "datetime": str(dt_now),
-                        "axes": axes,
-                        "model_param": model_param
-                        }
-
-                with open('param.json', 'w') as json_file:
-                    json.dump(param, json_file)
+                self.write_param
                 break
         os.chdir("../../")
 
     def save_astablishment_space(self, astablishment_space):
-        dt_now = datetime.datetime.now()
-
         file_list = glob.glob("./astablishment_space/*")
 
         n = 1
@@ -235,23 +221,11 @@ class InputCalculator:
                 os.mkdir(path)
                 os.chdir(path)
                 np.save("astablishment_space", astablishment_space)
-                model_param = self.t_s.model.get_param()
-                axes = [axis.get_param() for axis in self.t_s.axes]
-
-                param = {
-                        "datetime": str(dt_now),
-                        "axes": axes,
-                        "model_param": model_param
-                        }
-
-                with open('param.json', 'w') as json_file:
-                    json.dump(param, json_file)
+                self.write_param()
                 break
         os.chdir("../../")
 
     def save_stochastic_matrix(self, stochastic_matrix):
-        dt_now = datetime.datetime.now()
-
         file_list = glob.glob("./stochastic_matrix/*")
 
         n = 1
@@ -266,20 +240,25 @@ class InputCalculator:
                 for i in range(self.t_s.element_count):
                     space_name = "stochastic_matrix" + str(i)
                     np.save(space_name, stochastic_matrix[i])
-
-                model_param = self.t_s.model.get_param()
-                axes = [axis.get_param() for axis in self.t_s.axes]
-
-                param = {
-                        "datetime": str(dt_now),
-                        "axes": axes,
-                        "model_param": model_param
-                        }
-
-                with open('param.json', 'w') as json_file:
-                    json.dump(param, json_file)
+                self.write_param()
                 break
         os.chdir("../../")
+
+    def write_param(self):
+        dt_now = datetime.datetime.now()
+        model_param = self.t_s.model.get_param()
+        axes = [axis.get_param() for axis in self.t_s.axes]
+
+        param = {
+                "datetime": str(dt_now),
+                "axes": axes,
+                "model_param": model_param,
+                "u_set": self.u_set,
+                "moderate_u": self.moderate_u
+                }
+
+        with open('param.json', 'w') as json_file:
+            json.dump(param, json_file)
 
     def load_stochastic_matrix(self, num):
         print("load_stochastic_matrix")

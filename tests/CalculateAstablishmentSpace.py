@@ -23,9 +23,8 @@ axes = [Axis(*param) for param in axes_param_list]
 print(axes)
 t_s = TopologicalSpace(*axes)
 graph_center = ["theta", "theta_dot", [0, 0]]
-d = 1.
-u_set = np.arange(-2., 2. + d, d)
-moderate_u = 0
+u_set = json_data["u_set"]
+moderate_u = json_data["moderate_u"]
 inputCalculator = FuildSimulator(t_s, (0, 0), graph_center, u_set, moderate_u)
 stochastic_matrix, gather_matrix = inputCalculator.load_stochastic_matrix(num)
 inputCalculator.set_stochastic_matrix(stochastic_matrix, gather_matrix)

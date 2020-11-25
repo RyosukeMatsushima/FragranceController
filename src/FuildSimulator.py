@@ -98,8 +98,6 @@ class FuildSimulator(InputCalculator):
         self._simulate_time += self.t_s.delta_t
 
     def save_stochastic_matrix(self, stochastic_matrix, gather_matrix):
-        dt_now = datetime.datetime.now()
-
         file_list = glob.glob("./stochastic_matrix/*")
 
         n = 1
@@ -114,17 +112,7 @@ class FuildSimulator(InputCalculator):
                 np.save("stochastic_matrix", stochastic_matrix)
                 np.save("gather_matrix", gather_matrix)
 
-                model_param = self.t_s.model.get_param()
-                axes = [axis.get_param() for axis in self.t_s.axes]
-
-                param = {
-                        "datetime": str(dt_now),
-                        "axes": axes,
-                        "model_param": model_param
-                        }
-
-                with open('param.json', 'w') as json_file:
-                    json.dump(param, json_file)
+                self.write_param()
                 break
         os.chdir("../../")
 
@@ -134,6 +122,7 @@ class FuildSimulator(InputCalculator):
         os.chdir(stochastic_matrix_path)
         stochastic_matrix = np.load("stochastic_matrix.npy")
         gather_matrix = np.load("gather_matrix.npy")
+        os.chdir("../..")
         print("load_stochastic_matrix end")
         return stochastic_matrix, gather_matrix
 
