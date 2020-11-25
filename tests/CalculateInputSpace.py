@@ -31,7 +31,7 @@ for i in range(1):
 os.chdir(init_dir)
 graph_center = ["theta", "theta_dot", [0, 0]]
 d = 1.
-u_set = np.arange(-2., 2. + d, d)
+u_set = np.arange(-2., 2. + d, d).tolist()
 moderate_u = 0
 inputCalculator = InputCalculator(t_s, (0, 0), graph_center, u_set, moderate_u)
 inputCalculator.getInputSpace2(True)

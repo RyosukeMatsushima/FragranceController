@@ -16,21 +16,7 @@ from src.TopologicalSpace import TopologicalSpace
 
 class FuildSimulator(InputCalculator):
     def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg, u_set, moderate_u):
-        self.t_s = t_s
-        self.graph_arg = graph_arg
-        self.is_time_reversal = True
-
-        self.u_set = u_set
-        self.moderate_u = moderate_u
-        u_P_list = np.full(self.u_set.shape, 1.)
-        self.u_P_set = u_P_list/u_P_list.sum()
-        print("u_P_set")
-        print(self.u_P_set)
-
-        self.target_coodinate = target_coodinate
-        self._simulate_time = 0.
-        self.astablishment_space = copy(self.t_s.astablishment_space)
-        self.astablishment_space[self.t_s.coodinate2pos_AS(self.target_coodinate)] = 1.0 # set target coodinate
+        super().__init__(t_s, target_coodinate, graph_arg, u_set, moderate_u)
         self.astablishment_space_tf = tf.Variable(self.astablishment_space, dtype=tf.float32)
     
     def update_astablishment_space(self):

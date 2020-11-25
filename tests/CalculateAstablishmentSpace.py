@@ -9,7 +9,7 @@ import os
 import json
 
 init_dir = os.getcwd()
-num = 10
+num = 14
 path = "./stochastic_matrix/stochastic_matrix" + str(num)
 os.chdir(path)
 

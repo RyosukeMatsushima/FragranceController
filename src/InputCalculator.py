@@ -21,7 +21,7 @@ class InputCalculator:
 
         self.u_set = u_set
         self.moderate_u = moderate_u
-        u_P_list = np.full(self.u_set.shape, 1.)
+        u_P_list = np.full(len(u_set), 1.)
         self.u_P_set = u_P_list/u_P_list.sum()
         print("u_P_set")
         print(self.u_P_set)
@@ -253,7 +253,7 @@ class InputCalculator:
                 "datetime": str(dt_now),
                 "axes": axes,
                 "model_param": model_param,
-                "u_set": self.u_set.tolist(),
+                "u_set": self.u_set,
                 "moderate_u": self.moderate_u
                 }
 

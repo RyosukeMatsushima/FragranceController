@@ -10,7 +10,7 @@ t_s = TopologicalSpace(*axes)
 graph_center = ["theta", "theta_dot", [0, 0]]
 
 d = 1.
-u_set = np.arange(-2., 2. + d, d)
+u_set = np.arange(-2., 2. + d, d).tolist()
 moderate_u = 0
 inputCalculator = InputCalculator(t_s, (0, 0), graph_center, u_set, moderate_u)
 inputCalculator.init_stochastic_matrix(True)
