@@ -253,7 +253,7 @@ class InputCalculator:
                 "datetime": str(dt_now),
                 "axes": axes,
                 "model_param": model_param,
-                "u_set": self.u_set,
+                "u_set": self.u_set.tolist(),
                 "moderate_u": self.moderate_u
                 }
 
