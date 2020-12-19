@@ -129,13 +129,14 @@ class InputCalculator:
     def getInputSpace(self, to_high: bool):
         direction = -1.0 if to_high else 1.0
         gradient_matrix = self.t_s.gradient_matrix()
-        input_space = np.zeros([len(axis.elements) for axis in self.t_s.axes])
+        shape = [len(axis.elements) for axis in self.t_s.axes] + [len(self.moderate_u)]
+        input_space = np.zeros(shape)
         pos_TS_elements = self.t_s.pos_TS_elements()
 
         for pos_TS in tqdm(pos_TS_elements):
             gradient = direction * gradient_matrix[self.t_s.pos_TS2pos_AS(pos_TS)]
             dot_list = np.array([np.dot(gradient, self.norm_velosity(pos_TS, input)) for input in self.u_set])
-            proposal_input = self.u_set[np.where(dot_list == max(dot_list))]
+            proposal_input = np.array(self.u_set)[np.where(dot_list == max(dot_list))]
             if len(proposal_input) is not 1:
                 if gradient[0] != 0.0:
                     print("sevral proposal inputs exist")
@@ -143,7 +144,9 @@ class InputCalculator:
                     print(gradient)
                     print("pos_TS")
                     print(pos_TS)
-                    raise TypeError("omg")
+                    print("coodinate")
+                    print(self.t_s.pos_TS2coodinate(pos_TS))
+                    # raise TypeError("omg")
                 proposal_input = self.moderate_u
             input_space[pos_TS] = proposal_input
 
