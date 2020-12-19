@@ -35,7 +35,8 @@ class Simulator:
                 print("out of range")
                 return df
             model.input = self.input_space[tuple(self.t_s.coodinate2pos_TS(model.state))]
-            # singlePendulum.input = 4
+            if self.t_s.is_edge_of_TS(self.t_s.coodinate2pos_TS(model.state)):
+                return df
             tmp_data = tuple([time]) + model.state + tuple([model.input])
             print(time)
             print(model.state)
