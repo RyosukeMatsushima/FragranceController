@@ -23,6 +23,8 @@ class TopologicalSpace:
         self.set_posTS_space()
         self.set_coodinate_space()
         self.element_count = self._element_count(self.axes)
+        print("self.element_count")
+        print(self.element_count)
 
         # parameter set
         self.delta_t = 0.001
