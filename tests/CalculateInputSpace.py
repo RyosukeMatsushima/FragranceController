@@ -9,7 +9,7 @@ import os
 import json
 
 init_dir = os.getcwd()
-num = 6
+num = 36
 path = "./astablishment_space/astablishment_space" + str(num)
 os.chdir(path)
 
@@ -29,5 +29,9 @@ for i in range(1):
     t_s.show_astablishment_space_in_range("theta", "theta_dot", [0, 0], max_val)
 
 os.chdir(init_dir)
-inputCalculator = InputCalculator(t_s)
-inputCalculator.getInputSpace(False)
+graph_center = ["theta", "theta_dot", [0, 0]]
+d = 1.
+u_set = np.arange(-2., 2. + d, d).tolist()
+moderate_u = 0
+inputCalculator = InputCalculator(t_s, (0, 0), graph_center, u_set, moderate_u)
+inputCalculator.getInputSpace2(True)

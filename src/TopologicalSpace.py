@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import itertools
 from tempfile import mkdtemp
 import os.path as path
+from tqdm import tqdm
 
 from src.Axis import Axis
 from src.submodule.PhysicsSimulator.SinglePendulum.SinglePendulum import SinglePendulum
@@ -19,7 +20,8 @@ class TopologicalSpace:
         self.model = SinglePendulum(3, 0, mass=0.6, length=2, drag=0.1)
         self.axes = axes
         self.element_count = self._element_count(self.axes)
-        self.astablishment_space = np.zeros(self.element_count)
+        filename = path.join(mkdtemp(), 'astablishment_space.dat')
+        self.astablishment_space = np.memmap(filename, dtype='float32', mode='w+', shape=self.element_count)
 
         # parameter set
         self.delta_t = 0.001
@@ -92,11 +94,12 @@ class TopologicalSpace:
 # calcurate stochastic_matrix using windward difference method
 # TODO: find refarence
     def stochastic_matrix(self, is_time_reversal: bool, input_set, input_P_set):
+        print("calculate stochastic_matrix")
         filename = path.join(mkdtemp(), 'stochastic_matrix.dat')
         stochastic_matrix = np.memmap(filename, dtype='float32', mode='w+', shape=(self.element_count, self.element_count))
         pos_TS_elements = self.pos_TS_elements()
         time_direction = -1.0 if is_time_reversal else 1.0
-        for pos_TS in pos_TS_elements:
+        for pos_TS in tqdm(pos_TS_elements):
             for i, input in enumerate(input_set):
                 input_P = input_P_set[i]
                 if self.is_edge_of_TS(pos_TS):
@@ -148,6 +151,46 @@ class TopologicalSpace:
                 follow_val = self.astablishment_space[self.pos_TS2pos_AS(follow_pos)]
                 step = self.axes[i].get_step(pos_TS[i])
                 gradient_matrix[self.pos_TS2pos_AS(pos_TS), i] = differential_calculus(pre_val, follow_val, step)
+
+        return gradient_matrix
+
+    def gradient_matrix2(self):
+        gradient_matrix = np.zeros((self.element_count, len(self.axes)))
+        pos_TS_elements = self.pos_TS_elements()
+
+        for pos_TS in pos_TS_elements:
+            if self.is_edge_of_TS(pos_TS):
+                continue
+
+            time_list = np.zeros(len(pos_TS))
+            for i in range(len(pos_TS)): #TODO: turn to list first
+                pre_pos = list(pos_TS[:])
+                pre_pos[i] -= 1
+                follow_pos = list(pos_TS[:])
+                follow_pos[i] += 1
+
+                if (follow_pos[i] - pre_pos[i]) is not 2:
+                    ArithmeticError("gradient_matrix is wrong") #TODO: remove sometimes
+
+                pre_val = self.astablishment_space[self.pos_TS2pos_AS(pre_pos)]
+                follow_val = self.astablishment_space[self.pos_TS2pos_AS(follow_pos)]
+                val = 0.0
+                direction = 0.0
+                if pre_val < follow_val:
+                    val = pre_val
+                    direction = -1.0
+                else:
+                    val = follow_val
+                    direction = 1.0
+                if val == 0:
+                    continue
+                time_list[i] = val
+                gradient_matrix[self.pos_TS2pos_AS(pos_TS), i] = direction
+
+            min_time = np.min(time_list)
+            if min_time == 0.0:
+                continue
+            gradient_matrix[self.pos_TS2pos_AS(pos_TS), np.where( time_list != min_time )] = 0.0
 
         return gradient_matrix
 
