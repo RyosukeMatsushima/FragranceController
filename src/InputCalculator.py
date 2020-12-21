@@ -31,8 +31,8 @@ class InputCalculator:
         self.target_coodinate = target_coodinate
         self._simulate_time = 0.
         self.astablishment_space = copy(self.t_s.astablishment_space)
-        self.astablishment_space[self.t_s.coodinate2pos_AS(self.target_coodinate)] = 1.0 # set target coodinate
-        self.astablishment_space_tf = tf.Variable(np.array([self.astablishment_space]).T, dtype=tf.float32)
+        self.t_s.astablishment_space[self.t_s.coodinate2pos_AS(self.target_coodinate)] = 1.0 # set target coodinate
+        self.astablishment_space_tf = tf.Variable(np.array([self.t_s.astablishment_space]).T, dtype=tf.float32)
 
     def init_stochastic_matrix(self, save: bool):
         stochastic_matrix = self.t_s.stochastic_matrix(self.is_time_reversal, self.u_set, self.u_P_set)
@@ -111,8 +111,8 @@ class InputCalculator:
         self.save_astablishment_space(self.t_s.astablishment_space)
 
     def method2(self, threshold_param, trains_num):
-        self.t_s.astablishment_space.fill(0.0)
-        self.astablishment_space.fill(0.0)
+        # self.t_s.astablishment_space.fill(0.0)
+        # self.astablishment_space.fill(0.0)
 
         for i in tqdm(range(trains_num)):
             self.update_astablishment_space()

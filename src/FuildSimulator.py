@@ -17,7 +17,7 @@ from src.TopologicalSpace import TopologicalSpace
 class FuildSimulator(InputCalculator):
     def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg, u_set, moderate_u, model, delta_t):
         super().__init__(t_s, target_coodinate, graph_arg, u_set, moderate_u, model)
-        self.astablishment_space_tf = tf.Variable(self.astablishment_space, dtype=tf.float32)
+        self.astablishment_space_tf = tf.Variable(self.t_s.astablishment_space, dtype=tf.float32)
         self.delta_t = delta_t
     
     def update_astablishment_space(self):
@@ -26,13 +26,18 @@ class FuildSimulator(InputCalculator):
     def init_stochastic_matrix(self, save: bool):
         print("\n init_stochastic_matrix \n")
         step_list = np.array([axis.min_step for axis in self.t_s.axes]) #TODO: applay changeable step
-        courant_number_list = [np.apply_along_axis(lambda x: self.model.dynamics(*x, u) * self.delta_t / step_list, 1, self.t_s.coodinate_space) for u in self.u_set]
+        courant_number_list = [np.apply_along_axis(lambda x: -self.model.dynamics(*x, u) * self.delta_t / step_list, 1, self.t_s.coodinate_space) for u in self.u_set]
         positive_courant_number_list = np.array([np.where(courant_number > 0, courant_number, 0) for courant_number in courant_number_list])
-        negative_courant_number_list = np.array([np.where(courant_number < 0, courant_number, 0) for courant_number in courant_number_list])
+        negative_courant_number_list = np.array([np.where(courant_number < 0, -courant_number, 0) for courant_number in courant_number_list])
         abs_courant_number_list = np.array([np.abs(courant_number) for courant_number in courant_number_list])
         abs_courant_number_list = np.sum(abs_courant_number_list, axis=2)
-        positive_gather = [np.roll(self.t_s.posTS_space, -1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]
-        negative_gather = [np.roll(self.t_s.posTS_space, 1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]
+        positive_gather = np.array([np.roll(self.t_s.posTS_space, -1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]).T
+        negative_gather = np.array([np.roll(self.t_s.posTS_space, 1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]).T
+
+        print("np.roll(self.t_s.posTS_space, -1, axis=axis)")
+        print(np.roll(self.t_s.posTS_space, -1, axis=1))
+        print("np.roll(self.t_s.posTS_space, -1, axis=axis).reshape(self.t_s.element_count)")
+        print(np.roll(self.t_s.posTS_space, -1, axis=1).reshape(self.t_s.element_count))
 
         # check abs courant_number < 1
         for abs_courant_number in abs_courant_number_list:
@@ -41,21 +46,30 @@ class FuildSimulator(InputCalculator):
                 pos = np.where(abs_courant_number == max_courant_number)
                 pos_TS = self.t_s.pos_AS2pos_TS(pos[0])
                 coodinate = self.t_s.pos_TS2coodinate(pos_TS)
-                axis_num = pos[1][0]
-                axis = self.t_s.axes[axis_num]
-                s = " coodinate: " + str(coodinate) + " axis: " + axis.name + " step" + str(axis.min_step) + " max_courant_number: " + str(max_courant_number)
+                s = " coodinate: " + str(coodinate) + " max_courant_number: " + str(max_courant_number)
                 s = "p_remain_pos is under zero" + s
                 raise ArithmeticError(s)
 
         positive_courant_number = np.sum(positive_courant_number_list * self.u_P, axis=0)
         negative_courant_number = np.sum(negative_courant_number_list * self.u_P, axis=0)
-        abs_courant_number = np.sum(abs_courant_number_list * self.u_P, axis=0)
+        abs_courant_number = np.sum((abs_courant_number_list) * self.u_P, axis=0)
 
         self.positive_courant_number_tf = tf.constant(positive_courant_number, dtype=tf.float32)
         self.negative_courant_number_tf = tf.constant(negative_courant_number, dtype=tf.float32)
         self.abs_courant_number_tf = tf.constant(abs_courant_number, dtype=tf.float32)
         self.positive_gather_tf = tf.constant(positive_gather, dtype=tf.int32)
         self.negative_gather_tf = tf.constant(negative_gather, dtype=tf.int32)
+
+        print("self.positive_courant_number_tf")
+        print(self.positive_courant_number_tf)
+        print("self.negative_courant_number_tf")
+        print(self.negative_courant_number_tf)
+        print("self.abs_courant_number_tf")
+        print(self.abs_courant_number_tf)
+        print("self.positive_gather_tf")
+        print(self.positive_gather_tf)
+        print("self.negative_gather_tf")
+        print(self.negative_gather_tf)
         if save:
             #TODO: add save logic
             print(" ")
@@ -63,9 +77,9 @@ class FuildSimulator(InputCalculator):
         print("\n init_stochastic_matrix end \n")
 
     def simulate(self):
-        for i in range(self.stochastic_matrix_tf.shape[0]):
-            self.gathered_matrix_tf[i].assign(tf.gather(self.astablishment_space_tf, self.gather_matrix_tf[i]))
-        self.astablishment_space_tf.assign(tf.reduce_sum(self.stochastic_matrix_tf * self.gathered_matrix_tf, 0))
+        positive = tf.reduce_sum(self.positive_courant_number_tf * tf.gather(self.astablishment_space_tf, self.positive_gather_tf), 1)
+        negative = tf.reduce_sum(self.negative_courant_number_tf * tf.gather(self.astablishment_space_tf, self.negative_gather_tf), 1)
+        self.astablishment_space_tf.assign(positive + negative - self.abs_courant_number_tf * self.astablishment_space_tf + self.astablishment_space_tf)
         self._simulate_time += self.delta_t
 
     def save_stochastic_matrix(self, stochastic_matrix, gather_matrix):

@@ -8,12 +8,13 @@ from src.submodule.PhysicsSimulator.SinglePendulum.SinglePendulum import SingleP
 
 class FuildSimulatorTest(unittest.TestCase):
     def test_init_stochastic_matrix(self):
-        axes = (Axis("theta", -10.0, 10.0, 0.1), Axis("theta_dot", - 10.0, 10.0, 0.1))
+        axes = (Axis("theta", -7.0, 7.0, 0.1), Axis("theta_dot", - 7.0, 7.0, 0.1))
         self.topologicalSpace = TopologicalSpace(*axes)
-        self.model = SinglePendulum(0, 0)
+        self.model = SinglePendulum(0, 0, mass=0.6, length=2, drag=0.1)
         graph_center = ["theta", "theta_dot", [0, 0]]
-        self.fuildSimulator = FuildSimulator(self.topologicalSpace, [0, 0], graph_center, [-1, 0, 1], 0, self.model, 0.00001)
+        self.fuildSimulator = FuildSimulator(self.topologicalSpace, [0, 0], graph_center, [-1, 0, 1], 0, self.model, 0.001)
         self.fuildSimulator.init_stochastic_matrix(True)
+        self.fuildSimulator.method2(0.0024, 10000)
         # print("self.fuildSimulator.vel_space_tf")
         # print(self.fuildSimulator.vel_space_tf)
 
