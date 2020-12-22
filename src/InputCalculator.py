@@ -60,7 +60,7 @@ class InputCalculator:
         self.t_s.astablishment_space = self.astablishment_space_tf.numpy().T[0]
 
     def norm_velosity(self, pos_TS, input):
-        vel = self.t_s.model.dynamics(*pos_TS, input)
+        vel = self.model.dynamics(*pos_TS, input)
         norm_param = np.linalg.norm(vel)
         if norm_param == 0.0:
             return np.zeros(vel.shape)
@@ -70,14 +70,14 @@ class InputCalculator:
 
         self.update_astablishment_space()
         self.t_s.show_astablishment_space(*self.graph_arg)
-        self.t_s.model.state = self.target_coodinate
+        self.model.state = self.target_coodinate
         columns = ["time"] + [axis.name for axis in self.t_s.axes]
         df = pd.DataFrame(columns=columns)
         for i in range(10):
             for j in range(1000):
                 self.simulate()
-                self.t_s.model.step(self.t_s.delta_t)
-                tmp_data = tuple([self._simulate_time]) + self.t_s.model.state
+                self.model.step(self.t_s.delta_t)
+                tmp_data = tuple([self._simulate_time]) + self.model.state
                 tmp_se = pd.Series(tmp_data, index=df.columns)
                 df = df.append(tmp_se, ignore_index=True)
 
@@ -203,11 +203,13 @@ class InputCalculator:
         self.astablishment_space_tf.assign(- self.stochastic_matrix_tf @ val1 @ self.astablishment_space_tf)
 
     def save_input_space(self, input_space):
-        file_list = glob.glob("./input_space/*")
+        path2dir = "./input_space/" + self.model.name
+        os.makedirs(path2dir, exist_ok=True)
+        file_list = glob.glob(path2dir + "/*")
 
         n = 1
         while(True):
-            path = "./input_space/input_space" + str(n)
+            path = path2dir + "/input_space" + str(n)
             n += 1
             if not path in file_list:
                 print(path)
@@ -216,14 +218,16 @@ class InputCalculator:
                 np.save("input_space", input_space)
                 self.write_param()
                 break
-        os.chdir("../../")
+        os.chdir("../../../")
 
     def save_astablishment_space(self, astablishment_space):
-        file_list = glob.glob("./astablishment_space/*")
+        path2dir = "./astablishment_space/" + self.model.name
+        os.makedirs(path2dir, exist_ok=True)
+        file_list = glob.glob(path2dir + "/*")
 
         n = 1
         while(True):
-            path = "./astablishment_space/astablishment_space" + str(n)
+            path = path2dir + "/astablishment_space" + str(n)
             n += 1
             if not path in file_list:
                 print(path)
@@ -232,7 +236,7 @@ class InputCalculator:
                 np.save("astablishment_space", astablishment_space)
                 self.write_param()
                 break
-        os.chdir("../../")
+        os.chdir("../../../")
 
     def save_stochastic_matrix(self, stochastic_matrix):
         file_list = glob.glob("./stochastic_matrix/*")
