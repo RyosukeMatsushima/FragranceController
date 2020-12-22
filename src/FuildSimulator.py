@@ -40,8 +40,8 @@ class FuildSimulator(InputCalculator):
         negative_courant_number_list = np.array([np.where(courant_number < 0, -courant_number, 0) for courant_number in courant_number_list])
         abs_courant_number_list = np.array([np.abs(courant_number) for courant_number in courant_number_list])
         abs_courant_number_list = np.sum(abs_courant_number_list, axis=2)
-        positive_gather = np.array([np.roll(self.t_s.posTS_space, -1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]).T
-        negative_gather = np.array([np.roll(self.t_s.posTS_space, 1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]).T
+        positive_gather = np.array([np.roll(self.t_s.posTS_space, 1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]).T
+        negative_gather = np.array([np.roll(self.t_s.posTS_space, -1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]).T
 
         print("np.roll(self.t_s.posTS_space, -1, axis=axis)")
         print(np.roll(self.t_s.posTS_space, -1, axis=1))
