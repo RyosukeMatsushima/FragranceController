@@ -5,14 +5,15 @@ from src.TopologicalSpace import TopologicalSpace
 from src.submodule.PhysicsSimulator.SinglePendulum.SinglePendulum import SinglePendulum
 
 class Simulator:
-    def __init__(self, t_s: TopologicalSpace, input_space):
+    def __init__(self, t_s: TopologicalSpace, input_space, model):
         self.t_s = t_s
         self.input_space = input_space
+        self.model = model
         self.time_range = 20
 
     # start simulation
     def do(self):
-        model = self.t_s.model
+        model = self.model
 
         time = 0.
         dt = 10**(-2)
