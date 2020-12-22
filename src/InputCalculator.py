@@ -132,7 +132,9 @@ class InputCalculator:
     def getInputSpace(self, to_high: bool):
         direction = -1.0 if to_high else 1.0
         gradient_matrix = self.t_s.gradient_matrix()
-        shape = [len(axis.elements) for axis in self.t_s.axes] + [len(self.moderate_u)]
+        shape = [len(axis.elements) for axis in self.t_s.axes]
+        if type(self.moderate_u) == list:
+          shape += [len([self.moderate_u])]
         input_space = np.zeros(shape)
         pos_TS_elements = self.t_s.pos_TS_elements()
 
