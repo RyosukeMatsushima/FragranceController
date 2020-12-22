@@ -18,5 +18,13 @@ class FuildSimulatorTest(unittest.TestCase):
         # print("self.fuildSimulator.vel_space_tf")
         # print(self.fuildSimulator.vel_space_tf)
 
+    def test_get_boundary_condition(self):
+        axes = (Axis("theta", -2.0, 2.0, 0.1), Axis("theta_dot", - 1.0, 1.0, 0.1))
+        self.topologicalSpace = TopologicalSpace(*axes)
+        self.model = SinglePendulum(0, 0, mass=0.6, length=2, drag=0.1)
+        graph_center = ["theta", "theta_dot", [0, 0]]
+        self.fuildSimulator = FuildSimulator(self.topologicalSpace, [0, 0], graph_center, [-1, 0, 1], 0, self.model, 0.001)
+        self.fuildSimulator.get_boundary_condition()
+
 if __name__ == "__main__":
     unittest.main()

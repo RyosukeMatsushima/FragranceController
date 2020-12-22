@@ -19,6 +19,16 @@ class FuildSimulator(InputCalculator):
         super().__init__(t_s, target_coodinate, graph_arg, u_set, moderate_u, model)
         self.astablishment_space_tf = tf.Variable(self.t_s.astablishment_space, dtype=tf.float32)
         self.delta_t = delta_t
+
+    def get_boundary_condition(self):
+        boundary_condition = np.ones(self.t_s.element_count, dtype=np.float32)
+        min_edge = [axis.min + axis.min_step/2 for axis in self.t_s.axes]
+        max_edge = [axis.max - axis.min_step/2 for axis in self.t_s.axes]
+        boundary_condition[np.any((self.t_s.coodinate_space < min_edge), axis=1)] = 0.
+        boundary_condition[np.any((self.t_s.coodinate_space > max_edge), axis=1)] = 0.
+
+        self.boundary_condition_tf = tf.constant(boundary_condition, dtype=tf.float32)
+        del boundary_condition, min_edge, max_edge
     
     def update_astablishment_space(self):
         self.t_s.astablishment_space = self.astablishment_space_tf.numpy()
@@ -59,6 +69,7 @@ class FuildSimulator(InputCalculator):
         self.abs_courant_number_tf = tf.constant(abs_courant_number, dtype=tf.float32)
         self.positive_gather_tf = tf.constant(positive_gather, dtype=tf.int32)
         self.negative_gather_tf = tf.constant(negative_gather, dtype=tf.int32)
+        self.get_boundary_condition()
 
         print("self.positive_courant_number_tf")
         print(self.positive_courant_number_tf)
@@ -77,6 +88,7 @@ class FuildSimulator(InputCalculator):
         print("\n init_stochastic_matrix end \n")
 
     def simulate(self):
+        self.astablishment_space_tf.assign(self.astablishment_space_tf * self.boundary_condition_tf)
         positive = tf.reduce_sum(self.positive_courant_number_tf * tf.gather(self.astablishment_space_tf, self.positive_gather_tf), 1)
         negative = tf.reduce_sum(self.negative_courant_number_tf * tf.gather(self.astablishment_space_tf, self.negative_gather_tf), 1)
         self.astablishment_space_tf.assign(positive + negative - self.abs_courant_number_tf * self.astablishment_space_tf + self.astablishment_space_tf)
