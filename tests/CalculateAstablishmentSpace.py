@@ -31,4 +31,4 @@ inputCalculator = FuildSimulator(t_s, [0, 0], graph_center, [-1, 0, 1], 0, model
 inputCalculator.load_stochastic_matrix(num)
 # inputCalculator.init_eye()
 # inputCalculator.method1()
-inputCalculator.method2(0.0024, 10000)
+inputCalculator.method2(0.0024, 10000, True)
