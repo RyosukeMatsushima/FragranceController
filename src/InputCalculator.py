@@ -14,10 +14,11 @@ import json
 import datetime
 
 class InputCalculator:
-    def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg, u_set, moderate_u, model):
+    def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg, u_set, moderate_u, model, delta_t):
         self.t_s = t_s
         self.graph_arg = graph_arg
         self.model = model
+        self.delta_t = delta_t
         self.is_time_reversal = True
 
         self.u_set = u_set
@@ -254,15 +255,17 @@ class InputCalculator:
 
     def write_param(self):
         dt_now = datetime.datetime.now()
-        model_param = self.t_s.model.get_param()
+        model_param = self.model.get_param()
         axes = [axis.get_param() for axis in self.t_s.axes]
 
         param = {
+                "model_name": self.model.name,
                 "datetime": str(dt_now),
                 "axes": axes,
                 "model_param": model_param,
                 "u_set": self.u_set,
-                "moderate_u": self.moderate_u
+                "moderate_u": self.moderate_u,
+                "delta_t": self.delta_t
                 }
 
         with open('param.json', 'w') as json_file:

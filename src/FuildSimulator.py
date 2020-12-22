@@ -16,9 +16,8 @@ from src.TopologicalSpace import TopologicalSpace
 
 class FuildSimulator(InputCalculator):
     def __init__(self, t_s: TopologicalSpace, target_coodinate, graph_arg, u_set, moderate_u, model, delta_t):
-        super().__init__(t_s, target_coodinate, graph_arg, u_set, moderate_u, model)
+        super().__init__(t_s, target_coodinate, graph_arg, u_set, moderate_u, model, delta_t)
         self.astablishment_space_tf = tf.Variable(self.t_s.astablishment_space, dtype=tf.float32)
-        self.delta_t = delta_t
 
     def get_boundary_condition(self):
         boundary_condition = np.ones(self.t_s.element_count, dtype=np.float32)
@@ -81,9 +80,10 @@ class FuildSimulator(InputCalculator):
         print(self.positive_gather_tf)
         print("self.negative_gather_tf")
         print(self.negative_gather_tf)
+        print("self.boundary_condition_tf")
+        print(self.boundary_condition_tf)
         if save:
-            #TODO: add save logic
-            print(" ")
+            self.save_stochastic_matrix()
 
         print("\n init_stochastic_matrix end \n")
 
@@ -94,36 +94,42 @@ class FuildSimulator(InputCalculator):
         self.astablishment_space_tf.assign(positive + negative - self.abs_courant_number_tf * self.astablishment_space_tf + self.astablishment_space_tf)
         self._simulate_time += self.delta_t
 
-    def save_stochastic_matrix(self, stochastic_matrix, gather_matrix):
-        file_list = glob.glob("./stochastic_matrix/*")
+    def save_stochastic_matrix(self):
+        path2dir = "./stochastic_matrix/" + self.model.name
+        os.makedirs(path2dir, exist_ok=True)
+        file_list = glob.glob(path2dir + "/*")
 
         n = 1
         while(True):
-            path = "./stochastic_matrix/stochastic_matrix" + str(n)
+            path = path2dir + "/stochastic_matrix" + str(n)
             n += 1
             if not path in file_list:
                 print(path)
                 os.mkdir(path)
                 os.chdir(path)
 
-                np.save("stochastic_matrix", stochastic_matrix)
-                np.save("gather_matrix", gather_matrix)
+                np.save("positive_courant_number", self.positive_courant_number_tf.numpy())
+                np.save("negative_courant_number", self.negative_courant_number_tf.numpy())
+                np.save("abs_courant_number", self.abs_courant_number_tf.numpy())
+                np.save("positive_gather", self.positive_gather_tf.numpy())
+                np.save("negative_gather", self.negative_gather_tf.numpy())
+                np.save("boundary_condition", self.boundary_condition_tf.numpy())
 
                 self.write_param()
                 break
-        os.chdir("../../")
+        os.chdir("../../../")
 
     def load_stochastic_matrix(self, num):
         print("load_stochastic_matrix")
-        stochastic_matrix_path = "./stochastic_matrix/stochastic_matrix" + str(num)
+        stochastic_matrix_path = "./stochastic_matrix/" + self.model.name + "/stochastic_matrix" + str(num)
         os.chdir(stochastic_matrix_path)
-        stochastic_matrix = np.load("stochastic_matrix.npy")
-        gather_matrix = np.load("gather_matrix.npy")
-        os.chdir("../..")
-        print("load_stochastic_matrix end")
-        return stochastic_matrix, gather_matrix
 
-    def set_stochastic_matrix(self, stochastic_matrix, gather_matrix):
-        self.stochastic_matrix_tf = tf.constant(stochastic_matrix, dtype=tf.float32)
-        self.gather_matrix_tf = tf.constant(gather_matrix, dtype=tf.int64)
-        self.gathered_matrix_tf = tf.Variable(stochastic_matrix, dtype=tf.float32)
+        self.positive_courant_number_tf = tf.constant(np.load("positive_courant_number.npy"), dtype=tf.float32)
+        self.negative_courant_number_tf = tf.constant(np.load("negative_courant_number.npy"), dtype=tf.float32)
+        self.abs_courant_number_tf = tf.constant(np.load("abs_courant_number.npy"), dtype=tf.float32)
+        self.positive_gather_tf = tf.constant(np.load("positive_gather.npy"), dtype=tf.int32)
+        self.negative_gather_tf = tf.constant(np.load("negative_gather.npy"), dtype=tf.int32)
+        self.boundary_condition_tf = tf.constant(np.load("boundary_condition.npy"), dtype=tf.float32)
+
+        os.chdir("../../../")
+        print("load_stochastic_matrix end")
