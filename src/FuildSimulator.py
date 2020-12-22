@@ -35,7 +35,18 @@ class FuildSimulator(InputCalculator):
     def init_stochastic_matrix(self, save: bool):
         print("\n init_stochastic_matrix \n")
         step_list = np.array([axis.min_step for axis in self.t_s.axes]) #TODO: applay changeable step
-        courant_number_list = [np.apply_along_axis(lambda x: -self.model.dynamics(*x, u) * self.delta_t / step_list, 1, self.t_s.coodinate_space) for u in self.u_set]
+
+        split = int(self.t_s.element_count / 100000) + 1
+        print("split")
+        print(split)
+        splited_coodinate_space = np.array_split(self.t_s.coodinate_space, split, axis=0)
+        courant_number_list = []
+        for coodinate_space in tqdm(splited_coodinate_space):
+            splited_courant_number_list = np.array([np.apply_along_axis(lambda x: -self.model.dynamics(*x, u) * self.delta_t / step_list, 1, coodinate_space) for u in self.u_set])
+            if len(courant_number_list) == 0:
+                courant_number_list = splited_courant_number_list
+            else:
+                courant_number_list = np.concatenate((courant_number_list, splited_courant_number_list), axis = 1)
         positive_courant_number_list = np.array([np.where(courant_number > 0, courant_number, 0) for courant_number in courant_number_list])
         negative_courant_number_list = np.array([np.where(courant_number < 0, -courant_number, 0) for courant_number in courant_number_list])
         abs_courant_number_list = np.array([np.abs(courant_number) for courant_number in courant_number_list])
