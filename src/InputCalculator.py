@@ -111,6 +111,21 @@ class InputCalculator:
         self.update_astablishment_space()
         self.save_astablishment_space(self.t_s.astablishment_space)
 
+    def method1_5(self, trains_num, graph: bool):
+        for i in tqdm(range(trains_num)):
+            self.update_astablishment_space()
+            self.astablishment_space += self.t_s.astablishment_space
+            self.simulate()
+            if i % int(trains_num/10) == 0 and graph:
+                self.t_s.show_astablishment_space(*self.graph_arg)
+                save = self.t_s.astablishment_space
+                self.t_s.astablishment_space = self.astablishment_space
+                self.t_s.show_astablishment_space(*self.graph_arg)
+                self.t_s.astablishment_space = save
+        self.t_s.astablishment_space = self.astablishment_space
+        self.t_s.show_astablishment_space(*self.graph_arg)
+        self.save_astablishment_space(self.t_s.astablishment_space)
+
     def method2(self, threshold_param, trains_num, graph: bool):
         # self.t_s.astablishment_space.fill(0.0)
         # self.astablishment_space.fill(0.0)
