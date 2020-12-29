@@ -161,7 +161,7 @@ class InputCalculator:
     def get_input(self, coodinate, to_high: bool):
         direction = -1.0 if to_high else 1.0
         gradient = direction * self.t_s.get_gradient(coodinate)
-        dot_list = np.array([np.dot(gradient, self.norm_velosity(*coodinate, u)) for u in self.u_set])
+        dot_list = np.array([np.dot(gradient, self.norm_velosity(coodinate, u)) for u in self.u_set])
         proposal_input = np.array(self.u_set)[np.where(dot_list == max(dot_list))]
         if len(proposal_input) is not 1:
             if gradient[0] != 0.0:
@@ -172,6 +172,8 @@ class InputCalculator:
                 print(coodinate)
                 # raise TypeError("omg")
             proposal_input = self.moderate_u
+        else:
+            proposal_input = proposal_input[0]
         return proposal_input
 
     def getInputSpace2(self, to_high: bool):
