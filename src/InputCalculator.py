@@ -158,6 +158,22 @@ class InputCalculator:
         self.save_input_space(input_space)
         self.t_s.show_concentration_img(self.t_s.axes[0], self.t_s.axes[1], input_space)
 
+    def get_input(self, coodinate, to_high: bool):
+        direction = -1.0 if to_high else 1.0
+        gradient = direction * self.t_s.get_gradient(coodinate)
+        dot_list = np.array([np.dot(gradient, self.norm_velosity(*coodinate, u)) for u in self.u_set])
+        proposal_input = np.array(self.u_set)[np.where(dot_list == max(dot_list))]
+        if len(proposal_input) is not 1:
+            if gradient[0] != 0.0:
+                print("sevral proposal inputs exist")
+                print("gradient")
+                print(gradient)
+                print("coodinate")
+                print(coodinate)
+                # raise TypeError("omg")
+            proposal_input = self.moderate_u
+        return proposal_input
+
     def getInputSpace2(self, to_high: bool):
         direction = -1.0 if to_high else 1.0
         gradient_matrix = self.t_s.gradient_matrix2()
