@@ -36,4 +36,4 @@ d = 1.
 u_set = np.arange(-2., 2. + d, d).tolist()
 moderate_u = 0
 inputCalculator = InputCalculator(t_s, (0, 0), graph_center, u_set, moderate_u, model, json_data["delta_t"])
-inputCalculator.getInputSpace2(True)
+inputCalculator.getInputSpace(True)

@@ -149,31 +149,39 @@ class TopologicalSpace:
         return stochastic_matrix
 
     def gradient_matrix(self):
-        def differential_calculus(pre, follow, step):
-            return (pre - follow)/(2*step)
-
         gradient_matrix = np.zeros((self.element_count, len(self.axes)))
         pos_TS_elements = self.pos_TS_elements()
 
         for pos_TS in pos_TS_elements:
             if self.is_edge_of_TS(pos_TS):
                 continue
-
-            for i in range(len(pos_TS)): #TODO: turn to list first
-                pre_pos = list(pos_TS[:])
-                pre_pos[i] -= 1
-                follow_pos = list(pos_TS[:])
-                follow_pos[i] += 1
-
-                if (follow_pos[i] - pre_pos[i]) is not 2:
-                    ArithmeticError("gradient_matrix is wrong") #TODO: remove sometimes
-
-                pre_val = self.astablishment_space[self.pos_TS2pos_AS(pre_pos)]
-                follow_val = self.astablishment_space[self.pos_TS2pos_AS(follow_pos)]
-                step = self.axes[i].get_step(pos_TS[i])
-                gradient_matrix[self.pos_TS2pos_AS(pos_TS), i] = differential_calculus(pre_val, follow_val, step)
-
+            gradient_matrix[self.pos_TS2pos_AS(pos_TS)] = self.get_gradient(self.pos_TS2coodinate(pos_TS))
         return gradient_matrix
+
+    def get_gradient(self, coodinate):
+        def differential_calculus(pre, follow, step):
+            return (pre - follow)/(2*step)
+
+        pos_TS = self.coodinate2pos_TS(coodinate)
+        gradient = np.zeros(len(self.axes))
+        if self.is_edge_of_TS(pos_TS):
+            raise ArithmeticError("coodinate is in edge")
+
+        for i in range(len(pos_TS)): #TODO: turn to list first
+            pre_pos = list(pos_TS[:])
+            pre_pos[i] -= 1
+            follow_pos = list(pos_TS[:])
+            follow_pos[i] += 1
+
+            if (follow_pos[i] - pre_pos[i]) is not 2:
+                ArithmeticError("gradient_matrix is wrong") #TODO: remove sometimes
+
+            pre_val = self.astablishment_space[self.pos_TS2pos_AS(pre_pos)]
+            follow_val = self.astablishment_space[self.pos_TS2pos_AS(follow_pos)]
+            step = self.axes[i].get_step(pos_TS[i])
+            gradient[i] = differential_calculus(pre_val, follow_val, step)
+
+        return gradient
 
     def gradient_matrix2(self):
         gradient_matrix = np.zeros((self.element_count, len(self.axes)))
