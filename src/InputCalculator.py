@@ -59,8 +59,8 @@ class InputCalculator:
     def update_astablishment_space(self):
         self.t_s.astablishment_space = self.astablishment_space_tf.numpy().T[0]
 
-    def norm_velosity(self, pos_TS, input):
-        vel = self.model.dynamics(*pos_TS, input)
+    def norm_velosity(self, coodinate, u):
+        vel = self.model.dynamics(*coodinate, u)
         norm_param = np.linalg.norm(vel)
         if norm_param == 0.0:
             return np.zeros(vel.shape)
@@ -140,7 +140,7 @@ class InputCalculator:
 
         for pos_TS in tqdm(pos_TS_elements):
             gradient = direction * gradient_matrix[self.t_s.pos_TS2pos_AS(pos_TS)]
-            dot_list = np.array([np.dot(gradient, self.norm_velosity(pos_TS, input)) for input in self.u_set])
+            dot_list = np.array([np.dot(gradient, self.norm_velosity(self.t_s.pos_TS2coodinate(pos_TS), u)) for u in self.u_set])
             proposal_input = np.array(self.u_set)[np.where(dot_list == max(dot_list))]
             if len(proposal_input) is not 1:
                 if gradient[0] != 0.0:
