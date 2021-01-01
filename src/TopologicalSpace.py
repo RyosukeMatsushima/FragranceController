@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import itertools
 from tempfile import mkdtemp
 import os.path as path
 from tqdm import tqdm
+import itertools
 
 from src.Axis import Axis
 from src.submodule.PhysicsSimulator.SinglePendulum.SinglePendulum import SinglePendulum
@@ -17,14 +17,44 @@ coodinate
 
 class TopologicalSpace:
     def __init__(self, *axes: Axis):
-        self.model = SinglePendulum(3, 0, mass=0.6, length=2, drag=0.1)
+        print("init TopologicalSpace")
         self.axes = axes
+        self.set_astablishment_space()
+        self.set_posTS_space()
+        self.set_coodinate_space()
+        self.element_count = self._element_count(self.axes)
+        print("self.element_count")
+        print(self.element_count)
+
+        # parameter set
+        self.delta_t = 0.001
+        print("init TopologicalSpace end")
+
+    def set_astablishment_space(self):
         self.element_count = self._element_count(self.axes)
         filename = path.join(mkdtemp(), 'astablishment_space.dat')
         self.astablishment_space = np.memmap(filename, dtype='float32', mode='w+', shape=self.element_count)
 
-        # parameter set
-        self.delta_t = 0.001
+    def set_posTS_space(self):
+        print("\n set_posTS_space \n")
+        pos_AS_space = np.arange(self.element_count)
+        shape = tuple([len(axis.elements) for axis in self.axes])
+        pos_TS_space = pos_AS_space.reshape(shape)
+
+        filename = path.join(mkdtemp(), 'posTS_space.dat')
+        self.posTS_space = np.memmap(filename, dtype='int32', mode='w+', shape=shape)
+        self.posTS_space = pos_TS_space
+
+        del pos_AS_space, pos_TS_space, shape
+
+        print("\n set_posTS_space end \n")
+
+    def set_coodinate_space(self):
+        print("\n set_coodinate_space \n")
+        filename = path.join(mkdtemp(), 'coodinate_space.dat')
+        self.coodinate_space = np.memmap(filename, dtype='float32', mode='w+', shape=(self.element_count, len(self.axes)))
+        self.coodinate_space = np.array(list(itertools.product(*[axis.elements for axis in self.axes])))
+        print("\n set_coodinate_space end \n")
 
     def _element_count(self, axes):
         val = 1
@@ -41,23 +71,14 @@ class TopologicalSpace:
         self.astablishment_space[self.pos_TS2pos_AS(pos_TS)] = val
 
     def pos_TS2pos_AS(self, pos_TS):
-        if len(pos_TS) is not len(self.axes):
-            raise TypeError("size of pos_TS and number of axes is not same")
-        axis_list = [len(axis.elements) - 1 for axis in self.axes]
-        pos = 0
-        for i in range(len(self.axes)):
-            del axis_list[0]
-            step = self._times_all(axis_list)
-            pos += pos_TS[i] * step
-        return pos
+        l = self.posTS_space[:]
+        for index in pos_TS:
+            l = l[index]
+        return l
 
-    def pos_AS2pos_TS(self, pos_AS):    #TODO: recheck
-        pos = pos_AS
-        pos_TS = []
-        for axis in self.axes:
-            pos_TS.append(int(pos/len(axis.elements)))
-            pos = pos % len(axis.elements)
-        return pos_TS
+    def pos_AS2pos_TS(self, pos_AS):
+        #TODO: check out of chenge
+        return np.where(self.posTS_space == pos_AS)
 
     def _times_all(self, l):
         val = 1
@@ -128,31 +149,39 @@ class TopologicalSpace:
         return stochastic_matrix
 
     def gradient_matrix(self):
-        def differential_calculus(pre, follow, step):
-            return (pre - follow)/(2*step)
-
         gradient_matrix = np.zeros((self.element_count, len(self.axes)))
         pos_TS_elements = self.pos_TS_elements()
 
         for pos_TS in pos_TS_elements:
             if self.is_edge_of_TS(pos_TS):
                 continue
-
-            for i in range(len(pos_TS)): #TODO: turn to list first
-                pre_pos = list(pos_TS[:])
-                pre_pos[i] -= 1
-                follow_pos = list(pos_TS[:])
-                follow_pos[i] += 1
-
-                if (follow_pos[i] - pre_pos[i]) is not 2:
-                    ArithmeticError("gradient_matrix is wrong") #TODO: remove sometimes
-
-                pre_val = self.astablishment_space[self.pos_TS2pos_AS(pre_pos)]
-                follow_val = self.astablishment_space[self.pos_TS2pos_AS(follow_pos)]
-                step = self.axes[i].get_step(pos_TS[i])
-                gradient_matrix[self.pos_TS2pos_AS(pos_TS), i] = differential_calculus(pre_val, follow_val, step)
-
+            gradient_matrix[self.pos_TS2pos_AS(pos_TS)] = self.get_gradient(self.pos_TS2coodinate(pos_TS))
         return gradient_matrix
+
+    def get_gradient(self, coodinate):
+        def differential_calculus(pre, follow, step):
+            return (pre - follow)/(2*step)
+
+        pos_TS = self.coodinate2pos_TS(coodinate)
+        gradient = np.zeros(len(self.axes))
+        if self.is_edge_of_TS(pos_TS):
+            raise ArithmeticError("coodinate is in edge")
+
+        for i in range(len(pos_TS)): #TODO: turn to list first
+            pre_pos = list(pos_TS[:])
+            pre_pos[i] -= 1
+            follow_pos = list(pos_TS[:])
+            follow_pos[i] += 1
+
+            if (follow_pos[i] - pre_pos[i]) is not 2:
+                ArithmeticError("gradient_matrix is wrong") #TODO: remove sometimes
+
+            pre_val = self.astablishment_space[self.pos_TS2pos_AS(pre_pos)]
+            follow_val = self.astablishment_space[self.pos_TS2pos_AS(follow_pos)]
+            step = self.axes[i].get_step(pos_TS[i])
+            gradient[i] = differential_calculus(pre_val, follow_val, step)
+
+        return gradient
 
     def gradient_matrix2(self):
         gradient_matrix = np.zeros((self.element_count, len(self.axes)))

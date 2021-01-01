@@ -1,26 +1,30 @@
-from unittest import TestCase
-from src.FuildSimulator import FuildSimulator
-from src.TopologicalSpace import TopologicalSpace
-from src.Axis import Axis
-
+import unittest
 import numpy as np
 
-axes = (Axis("theta", -1.0, 1.0, 0.1), Axis("theta_dot", -1.0, 1.0, 0.5))
-t_s = TopologicalSpace(*axes)
-graph_center = ["theta", "theta_dot", [0, 0]]
+from src.TopologicalSpace import TopologicalSpace
+from src.FuildSimulator import FuildSimulator
+from src.Axis import Axis
+from src.submodule.PhysicsSimulator.SinglePendulum.SinglePendulum import SinglePendulum
 
-d = 1.
-u_set = np.arange(-2., 2. + d, d).tolist()
-moderate_u = 0
-inputCalculator = FuildSimulator(t_s, (0, 0), graph_center, u_set, moderate_u)
-inputCalculator.init_stochastic_matrix(True)
-# inputCalculator.method2(0.024, 1000)
-# inputCalculator.update_astablishment_space()
-# inputCalculator.t_s.show_plot("theta", "theta_dot", [0, 0])
+class FuildSimulatorTest(unittest.TestCase):
+    def test_init_stochastic_matrix(self):
+        axes = (Axis("theta", -7.0, 7.0, 0.1), Axis("theta_dot", - 7.0, 7.0, 0.1))
+        self.topologicalSpace = TopologicalSpace(*axes)
+        self.model = SinglePendulum(0, 0, mass=0.6, length=2, drag=0.1)
+        graph_center = ["theta", "theta_dot", [0, 0]]
+        self.fuildSimulator = FuildSimulator(self.topologicalSpace, [0, 0], graph_center, [-1, 0, 1], 0, self.model, 0.002)
+        self.fuildSimulator.init_stochastic_matrix(True)
+        self.fuildSimulator.method2(0.0024, 10000, True)
+        # print("self.fuildSimulator.vel_space_tf")
+        # print(self.fuildSimulator.vel_space_tf)
 
-# while(True):
-#     for i in range(1000):
-#         inputCalculator.simulate()
-#     inputCalculator.update_astablishment_space()
-#     inputCalculator.t_s.show_plot("theta", "theta_dot", [0, 0])
-#     print(inputCalculator._simulate_time)
+    def test_get_boundary_condition(self):
+        axes = (Axis("theta", -2.0, 2.0, 0.1), Axis("theta_dot", - 1.0, 1.0, 0.1))
+        self.topologicalSpace = TopologicalSpace(*axes)
+        self.model = SinglePendulum(0, 0, mass=0.6, length=2, drag=0.1)
+        graph_center = ["theta", "theta_dot", [0, 0]]
+        self.fuildSimulator = FuildSimulator(self.topologicalSpace, [0, 0], graph_center, [-1, 0, 1], 0, self.model, 0.001)
+        self.fuildSimulator.get_boundary_condition()
+
+if __name__ == "__main__":
+    unittest.main()
