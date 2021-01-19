@@ -14,7 +14,9 @@ class FuildSimulatorTest(unittest.TestCase):
         graph_center = ["theta", "theta_dot", [0, 0]]
         self.fuildSimulator = FuildSimulator(self.topologicalSpace, [0, 0], graph_center, [-1, 0, 1], 0, self.model, 0.002)
         self.fuildSimulator.init_stochastic_matrix(True)
-        self.fuildSimulator.method2(0.0024, 10000, True)
+        self.fuildSimulator.add_obstacle([-4., -2.], [-3., -1.5])
+        self.fuildSimulator.method1_5(10000, True)
+        # self.fuildSimulator.method2(0.0024, 10000, True)
         # print("self.fuildSimulator.vel_space_tf")
         # print(self.fuildSimulator.vel_space_tf)
 
