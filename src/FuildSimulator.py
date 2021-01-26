@@ -36,11 +36,7 @@ class FuildSimulator(InputCalculator):
         is_obstacle = np.all(is_obstacle_min, axis=0) & np.all(is_obstacle_max, axis=0)
         self.boundary_condition_tf = tf.where(is_obstacle, 0.0, self.boundary_condition_tf)
 
-    def update_astablishment_space(self):
-        self.t_s.astablishment_space = self.astablishment_space_tf.numpy()
-
-    def init_stochastic_matrix(self, save: bool):
-        print("\n init_stochastic_matrix \n")
+    def init_velocity_space(self, save: bool):
         filename = path.join(mkdtemp(), 'velocity_space.dat')
         velocity_space = np.memmap(filename, dtype='float32', mode='w+', shape=(len(self.u_set), self.t_s.element_count, len(self.t_s.axes)))
 
@@ -53,14 +49,20 @@ class FuildSimulator(InputCalculator):
             splited_velocity_space = np.array([np.apply_along_axis(lambda x: -self.model.dynamics(*x, u), 1, splited_coodinate_space) for u in self.u_set])
             velocity_space[:, num: num + len(splited_coodinate_space)] = splited_velocity_space
             num += len(splited_coodinate_space)
-        #TODO: save velocity_space
+        self.velocity_space_tf = tf.constant(velocity_space, dtype=tf.float32)
+        if save:
+            self.save_velocity_space()
 
-        velocity_space_tf = tf.constant(velocity_space, dtype=tf.float32)
+    def update_astablishment_space(self):
+        self.t_s.astablishment_space = self.astablishment_space_tf.numpy()
+
+    def init_stochastic_matrix(self, save: bool):
+        print("\n init_stochastic_matrix \n")
         step_list_tf = tf.constant([axis.min_step for axis in self.t_s.axes], dtype=tf.float32) #TODO: applay changeable step
 
         # calculate about advection term
         print("calculate about advection term")
-        courant_number_tf = tf.reduce_sum(velocity_space, 0) * self.u_P * self.delta_t / step_list_tf
+        courant_number_tf = tf.reduce_sum(self.velocity_space_tf, 0) * self.u_P * self.delta_t / step_list_tf
         positive_courant_number_tf = tf.where(courant_number_tf > 0, courant_number_tf, 0)
         negative_courant_number_tf = tf.where(courant_number_tf < 0, -courant_number_tf, 0)
         abs_courant_number_tf = tf.abs(courant_number_tf)
@@ -82,7 +84,7 @@ class FuildSimulator(InputCalculator):
 
         # calculate about diffusion term
         print("calculate about diffusion term")
-        diffusion_number_tf = tf.reduce_sum(velocity_space ** 2, 0) * self.u_P / 2 * self.delta_t ** 2 / step_list_tf ** 2
+        diffusion_number_tf = tf.reduce_sum(self.velocity_space_tf ** 2, 0) * self.u_P / 2 * self.delta_t ** 2 / step_list_tf ** 2
         sum_diffusion_number_tf = tf.reduce_sum(diffusion_number_tf, 1)
 
         # check abs diffusion_number < 1 to be stable
@@ -128,6 +130,34 @@ class FuildSimulator(InputCalculator):
         negative = tf.reduce_sum(self.negative_courant_number_tf * tf.gather(self.astablishment_space_tf, self.negative_gather_tf), 1)
         self.astablishment_space_tf.assign(positive + negative - self.abs_courant_number_tf * self.astablishment_space_tf + self.astablishment_space_tf)
         self._simulate_time += self.delta_t
+
+    def save_velocity_space(self):
+        path2dir = "./velocity_space/" + self.model.name
+        os.makedirs(path2dir, exist_ok=True)
+        file_list = glob.glob(path2dir + "/*")
+
+        n = 1
+        while(True):
+            path = path2dir + "/velocity_space" + str(n)
+            n += 1
+            if not path in file_list:
+                print(path)
+                os.mkdir(path)
+                os.chdir(path)
+                np.save("velocity_space", self.velocity_space_tf.numpy())
+                self.write_param()
+                break
+        os.chdir("../../../")
+
+    def load_velocity_space(self, num):
+        print("load_velocity_space")
+        stochastic_matrix_path = "./velocity_space/" + self.model.name + "/velocity_space" + str(num)
+        os.chdir(stochastic_matrix_path)
+
+        self.velocity_space_tf = tf.constant(np.load("velocity_space.npy"), dtype=tf.float32)
+
+        os.chdir("../../../")
+        print("load_velocity_space end")
 
     def save_stochastic_matrix(self):
         path2dir = "./stochastic_matrix/" + self.model.name
