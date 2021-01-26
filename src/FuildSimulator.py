@@ -51,7 +51,7 @@ class FuildSimulator(InputCalculator):
         num = 0
         for splited_coodinate_space in tqdm(splited_coodinate_space_list):
             splited_velocity_space = np.array([np.apply_along_axis(lambda x: -self.model.dynamics(*x, u), 1, splited_coodinate_space) for u in self.u_set])
-            velocity_space[num: num + len(splited_coodinate_space)] = splited_velocity_space
+            velocity_space[:, num: num + len(splited_coodinate_space)] = splited_velocity_space
             num += len(splited_coodinate_space)
         #TODO: save velocity_space
 
@@ -74,10 +74,9 @@ class FuildSimulator(InputCalculator):
             print("pos")
             print(pos)
             pos = pos[0]
-            u = self.u_set[pos[0]]
-            pos_TS = self.t_s.pos_AS2pos_TS(pos[0])
+            pos_TS = self.t_s.pos_AS2pos_TS(pos)
             coodinate = self.t_s.pos_TS2coodinate(pos_TS)
-            s = " input: " + str(u) + " coodinate: " + str(coodinate) + " max_courant_number: " + str(tf.reduce_max(abs_courant_number_tf).numpy())
+            s = " coodinate: " + str(coodinate) + " max_courant_number: " + str(tf.reduce_max(abs_courant_number_tf).numpy())
             s = "p_remain_pos is under zero beacse of courant_number" + s
             raise ArithmeticError(s)
 
@@ -92,16 +91,15 @@ class FuildSimulator(InputCalculator):
             print("pos")
             print(pos)
             pos = pos[0]
-            u = self.u_set[pos[0]]
-            pos_TS = self.t_s.pos_AS2pos_TS(pos[1])
+            pos_TS = self.t_s.pos_AS2pos_TS(pos)
             coodinate = self.t_s.pos_TS2coodinate(pos_TS)
-            s = " input: " + str(u) + " coodinate: " + str(coodinate) + " max_diffusion_number: " + str(tf.reduce_max(sum_diffusion_number_tf).numpy())
+            s = " coodinate: " + str(coodinate) + " max_courant_number: " + str(tf.reduce_max(abs_courant_number_tf).numpy())
             s = "p_remain_pos is under zero becase of diffusion_number" + s
             raise ArithmeticError(s)
 
         self.positive_courant_number_tf = positive_courant_number_tf + diffusion_number_tf
         self.negative_courant_number_tf = negative_courant_number_tf + diffusion_number_tf
-        self.abs_courant_number_tf = abs_courant_number_tf - 2 * sum_diffusion_number_tf
+        self.abs_courant_number_tf = abs_courant_number_tf + 2 * sum_diffusion_number_tf
         self.positive_gather_tf = tf.constant(positive_gather, dtype=tf.int32)
         self.negative_gather_tf = tf.constant(negative_gather, dtype=tf.int32)
 
