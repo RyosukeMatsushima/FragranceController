@@ -41,45 +41,70 @@ class FuildSimulator(InputCalculator):
 
     def init_stochastic_matrix(self, save: bool):
         print("\n init_stochastic_matrix \n")
-        step_list = np.array([axis.min_step for axis in self.t_s.axes]) #TODO: applay changeable step
+        filename = path.join(mkdtemp(), 'velocity_space.dat')
+        velocity_space = np.memmap(filename, dtype='float32', mode='w+', shape=(len(self.u_set), self.t_s.element_count, len(self.t_s.axes)))
 
         split = int(self.t_s.element_count / 100000) + 1
         print("split")
         print(split)
-        splited_coodinate_space = np.array_split(self.t_s.coodinate_space, split, axis=0)
-        courant_number_list = []
-        for coodinate_space in tqdm(splited_coodinate_space):
-            splited_courant_number_list = np.array([np.apply_along_axis(lambda x: -self.model.dynamics(*x, u) * self.delta_t / step_list, 1, coodinate_space) for u in self.u_set])
-            if len(courant_number_list) == 0:
-                courant_number_list = splited_courant_number_list
-            else:
-                courant_number_list = np.concatenate((courant_number_list, splited_courant_number_list), axis = 1)
-        courant_number_tf_list = tf.constant(courant_number_list, dtype=tf.float32)
-        positive_courant_number_tf_list = tf.where(courant_number_tf_list > 0, courant_number_tf_list, 0)
-        negative_courant_number_tf_list = tf.where(courant_number_tf_list < 0, -courant_number_tf_list, 0)
-        abs_courant_number_tf_list = tf.abs(courant_number_tf_list)
-        abs_courant_number_tf_list = tf.reduce_sum(abs_courant_number_tf_list, 2)
+        splited_coodinate_space_list = np.array_split(self.t_s.coodinate_space, split, axis=0)
+        num = 0
+        for splited_coodinate_space in tqdm(splited_coodinate_space_list):
+            splited_velocity_space = np.array([np.apply_along_axis(lambda x: -self.model.dynamics(*x, u), 1, splited_coodinate_space) for u in self.u_set])
+            velocity_space[num: num + len(splited_coodinate_space)] = splited_velocity_space
+            num += len(splited_coodinate_space)
+        #TODO: save velocity_space
+
+        velocity_space_tf = tf.constant(velocity_space, dtype=tf.float32)
+        step_list_tf = tf.constant([axis.min_step for axis in self.t_s.axes], dtype=tf.float32) #TODO: applay changeable step
+
+        # calculate about advection term
+        print("calculate about advection term")
+        courant_number_tf = tf.reduce_sum(velocity_space, 0) * self.u_P * self.delta_t / step_list_tf
+        positive_courant_number_tf = tf.where(courant_number_tf > 0, courant_number_tf, 0)
+        negative_courant_number_tf = tf.where(courant_number_tf < 0, -courant_number_tf, 0)
+        abs_courant_number_tf = tf.abs(courant_number_tf)
+        abs_courant_number_tf = tf.reduce_sum(abs_courant_number_tf, 1)
         positive_gather = np.array([np.roll(self.t_s.posTS_space, 1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]).T
         negative_gather = np.array([np.roll(self.t_s.posTS_space, -1, axis=axis).reshape(self.t_s.element_count) for axis in range(len(self.t_s.axes))]).T
 
-        # check abs courant_number < 1
-        if tf.size(tf.where(abs_courant_number_tf_list > 1)) != 0:
-            pos = tf.where(abs_courant_number_tf_list == tf.reduce_max(abs_courant_number_tf_list)).numpy()
+        # check abs courant_number < 1 to be stable
+        if tf.size(tf.where(abs_courant_number_tf > 1)) != 0:
+            pos = tf.where(abs_courant_number_tf == tf.reduce_max(abs_courant_number_tf)).numpy()
+            print("pos")
+            print(pos)
+            pos = pos[0]
+            u = self.u_set[pos[0]]
+            pos_TS = self.t_s.pos_AS2pos_TS(pos[0])
+            coodinate = self.t_s.pos_TS2coodinate(pos_TS)
+            s = " input: " + str(u) + " coodinate: " + str(coodinate) + " max_courant_number: " + str(tf.reduce_max(abs_courant_number_tf).numpy())
+            s = "p_remain_pos is under zero beacse of courant_number" + s
+            raise ArithmeticError(s)
+
+        # calculate about diffusion term
+        print("calculate about diffusion term")
+        diffusion_number_tf = tf.reduce_sum(velocity_space ** 2, 0) * self.u_P / 2 * self.delta_t ** 2 / step_list_tf ** 2
+        sum_diffusion_number_tf = tf.reduce_sum(diffusion_number_tf, 1)
+
+        # check abs diffusion_number < 1 to be stable
+        if tf.size(tf.where(sum_diffusion_number_tf > 1/2)) != 0:
+            pos = tf.where(sum_diffusion_number_tf == tf.reduce_max(sum_diffusion_number_tf)).numpy()
             print("pos")
             print(pos)
             pos = pos[0]
             u = self.u_set[pos[0]]
             pos_TS = self.t_s.pos_AS2pos_TS(pos[1])
             coodinate = self.t_s.pos_TS2coodinate(pos_TS)
-            s = " input: " + str(u) + " coodinate: " + str(coodinate) + " max_courant_number: " + str(tf.reduce_max(abs_courant_number_tf_list).numpy())
-            s = "p_remain_pos is under zero" + s
+            s = " input: " + str(u) + " coodinate: " + str(coodinate) + " max_diffusion_number: " + str(tf.reduce_max(sum_diffusion_number_tf).numpy())
+            s = "p_remain_pos is under zero becase of diffusion_number" + s
             raise ArithmeticError(s)
 
-        self.positive_courant_number_tf = tf.reduce_sum(positive_courant_number_tf_list, axis=0) * self.u_P
-        self.negative_courant_number_tf = tf.reduce_sum(negative_courant_number_tf_list, axis=0) * self.u_P
-        self.abs_courant_number_tf = tf.reduce_sum(abs_courant_number_tf_list, axis=0) * self.u_P
+        self.positive_courant_number_tf = positive_courant_number_tf + diffusion_number_tf
+        self.negative_courant_number_tf = negative_courant_number_tf + diffusion_number_tf
+        self.abs_courant_number_tf = abs_courant_number_tf - 2 * sum_diffusion_number_tf
         self.positive_gather_tf = tf.constant(positive_gather, dtype=tf.int32)
         self.negative_gather_tf = tf.constant(negative_gather, dtype=tf.int32)
+
         self.get_boundary_condition()
 
         print("self.positive_courant_number_tf")
